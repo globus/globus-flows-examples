@@ -9,7 +9,7 @@
         "compute_func_id": "<INSERT YOUR COMPUTE FUNCTION ID HERE>",
         "compute_transform_from": "/",
         "compute_transform_to": "/",
-        "compute_dest_path.=": "'/~/' + _context.run_id + '/'"
+        "compute_dest_path.=": "'/' + _context.run_id + '/'"
       },
       "ResultPath": "$.constants",
       "Next" : "MakeComputeWorkingDir"
@@ -86,8 +86,8 @@
       "ActionUrl": "https://transfer.actions.globus.org/transfer",
       "Parameters": {
         "source_endpoint.$": "$.source_endpoint",
-        "destination_endpoint.$": "$.constants.gcs_compute_endpoint_id",
-        "DATA.$": "$.iterator_vars.intermidate_transfer_data"
+        "destination_endpoint.$": "$.constants.gcs_endpoint_id",
+        "DATA.$": "$.iterator_vars.transfer_from_src_data"
       },
       "ResultPath": "$.transfer_from_src_result",
       "Next" : "RunComputeFunction"
@@ -102,7 +102,7 @@
             "function_id.$": "$.constants.compute_func_id",
             "args": [],
             "kwargs": {
-              "src_path.$" : "$.iterator_vars.compute_src_paths",
+              "src_paths.$" : "$.iterator_vars.compute_src_paths",
               "dest_path.$" : "$.constants.compute_dest_path",
               "transform_from.$": "$.constants.compute_transform_from",
               "transform_to.$": "$.constants.compute_transform_to"
@@ -117,7 +117,7 @@
       "Type": "Action",
       "ActionUrl": "https://transfer.actions.globus.org/transfer",
       "Parameters": {
-        "source_endpoint.$": "$.constants.gcs_compute_endpoint_id",
+        "source_endpoint.$": "$.constants.gcs_endpoint_id",
         "destination_endpoint.$": "$.destination.id",
         "DATA": [
           {
@@ -133,7 +133,7 @@
       "Type": "Action",
       "ActionUrl": "https://transfer.actions.globus.org/delete",
       "Parameters": {
-        "endpoint.$": "$.constants.gcs_compute_endpoint_id",
+        "endpoint.$": "$.constants.gcs_endpoint_id",
         "recursive": true,
         "DATA": [
           {

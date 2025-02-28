@@ -9,7 +9,7 @@
         "compute_func_id": "<INSERT YOUR COMPUTE FUNCTION ID HERE>",
         "compute_transform_from": "/",
         "compute_transform_to": "/",
-        "compute_dest_path.=": "'/~/' + _context.run_id + '/'"
+        "compute_dest_path.=": "'/' + _context.run_id + '/'"
       },
       "ResultPath": "$.constants",
       "Next" : "MakeComputeWorkingDir"
@@ -34,7 +34,7 @@
             "function_id.$": "$.constants.compute_func_id",
             "args": [],
             "kwargs": {
-              "src_path.$" : "$.source_path",
+              "src_paths.$" : "$.source_path",
               "dest_path.$" : "$.constants.compute_dest_path",
               "transform_from.$": "$.constants.compute_transform_from",
               "transform_to.$": "$.constants.compute_transform_to"
