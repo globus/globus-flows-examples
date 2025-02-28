@@ -1,0 +1,45 @@
+{
+  "type": "object",
+  "required": [
+    "source_endpoint",
+    "source_paths",
+    "destination"
+  ],
+  "properties": {
+    "source_endpoint": {
+      "type": "string",
+      "title": "Source Endpoint ID",
+      "description": "The endpoint id of the source collection"
+    },
+    "source_paths": {
+      "type": "array",
+      "title": "Source Collection Paths",
+      "description": "A list of paths on the source collection for the data"
+    },
+    "destination": {
+      "type": "object",
+      "title": "Destination",
+      "format": "globus-collection",
+      "required": [
+        "id",
+        "path"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "Destination Collection ID",
+          "format": "uuid",
+          "description": "The endpoint id of the destination collection"
+        },
+        "path": {
+          "type": "string",
+          "title": "Destination Collection Path",
+          "description": "The path on the destination collection to transfer the compute output"
+        }
+      },
+      "description": "The destination for the data",
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
