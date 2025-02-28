@@ -32,7 +32,7 @@ and copy down the Compute function's UUID.
 
 ### Path Transformation Explained
 
-The path transformation parameters `transform_from` and `transform_to` handle differences between how paths appear in the Globus ecosystem versus how they exist on the actual GCS collection's filesystem.
+The parameters `transform_from` and `transform_to` handle differences between paths as exposed by the GCS collection and paths on the underlying filesystem.
 
 **Example scenario:**
 - Your GCS collection maps its root to the absolute path `/path/to/root/`.
@@ -41,13 +41,13 @@ The path transformation parameters `transform_from` and `transform_to` handle di
 - However, the Compute function running on the GCS collection **does not know** about the mapping and can only find the files with the absolute paths.
 
 Thus, the Compute function must be provided with the GCS root mapping to do any needed transformations. In this example:
-- Set `transform_to` to the mapped root path (`/path/to/root/`) to transform the input src_paths to absolute paths.
+- Set `transform_to` to the mapped root path (`/path/to/root/`) to transform the input `src_paths` to absolute paths.
 - Set `transform_from` to the root directory (`/`) to transform the absolute paths to Globus paths.
 
 These transformations ensure the Compute function can correctly locate and access files regardless of how collection paths are mapped.
 
 ## Compute and Transfer Flow: Example 1
-In the first example, the Compute and Transfer flow takes in a user provided single source file that exists on your GCS collection, creates a tarfile from it, and transfers the tarfile to a user provided destination collection. Specifically, the flow will:
+In the first example, the Compute and Transfer flow takes a user-provided source file that already exists in the co-located GCS collection, creates a tarfile from it, and transfers the tarfile to a user provided destination collection. Specifically, the flow will:
 1. Set constants for the run
 2. Create an output directory named after the flow's run ID on your GCS collection
 3. Invoke the Compute function `do_tar` on the source file and create a tarfile in the output directory
