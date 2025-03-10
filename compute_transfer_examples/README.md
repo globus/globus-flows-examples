@@ -5,7 +5,7 @@ This guide demonstrates how to build flows that combine Globus Compute and Globu
 ## Prerequisites
 
 Before starting, ensure you have a shared GCS collection and Globus Compute endpoint.
-If you haven't set these up, follow [this guide](https://docs.globus.org/globus-connect-server/v5.4/) for setting up the GCS collection, and [this guide](https://globus-compute.readthedocs.io/en/latest/endpoints/installation.html) for setting up the Globus Compute endpoint. **Note**: The GCS collection and Globus Compute endpoint must have access to the same filesystem at the same path.
+If you haven't set these up, follow [this guide](https://docs.globus.org/globus-connect-server/v5.4/) for setting up the GCS collection, and [this guide](https://globus-compute.readthedocs.io/en/latest/endpoints/installation.html) for setting up the Globus Compute endpoint. **Note**: The GCS collection and Globus Compute endpoint must both have read/write permissions to the same filesystem location where operations will be performed.
 
 ## Register the Globus Compute Function
 
@@ -15,7 +15,7 @@ First, register the `do_tar` Compute function that your flows will invoke to cre
 ./transfer_compute_example/register_compute_func.py
 ```
 
-and copy down the Compute function's UUID.
+and save the Compute function's UUID.
 
 **Important**: Use the same Python version for registration as the one running on your Globus Compute Endpoint.
 
@@ -50,7 +50,7 @@ These transformations ensure the Compute function can correctly locate and acces
 In the first example, the Compute and Transfer flow takes a user-provided source file that already exists in the co-located GCS collection, creates a tarfile from it, and transfers the tarfile to a user provided destination collection. Specifically, the flow will:
 1. Set constants for the run
 2. Create an output directory named after the flow's run ID on your GCS collection
-3. Invoke the Compute function `do_tar` on the source file and create a tarfile in the output directory
+3. Invoke the Compute function `do_tar` on the source endpoint to create a tar archive from the input source file and save it in the output directory
 4. Transfer the resulting tarfile to the destination collection provided in the flow input
 5. Delete the output directory
 
@@ -59,8 +59,8 @@ In the first example, the Compute and Transfer flow takes a user-provided source
 1. Edit `compute_transfer_examples/compute_transfer_example_1_definition.json` and replace the placeholder values:
    - `gcs_endpoint_id`: Your GCS Collection ID
    - `compute_endpoint_id`: Your Compute Endpoint ID
-   - `compute_func_id`: The UUID of the registered `do_tar` function
-   - `compute_transform_from` and `compute_transform_to`: If your GCS collection uses path mapping
+   - `compute_function_id`: The UUID of the registered `do_tar` function
+   - `compute_transform_from` and `compute_transform_to`: If your GCS collection uses [base path mapping](https://docs.globus.org/globus-connect-server/v5/data-access-guide/#configure_collection_base_path)
 
 2. Register the flow:
    ```bash
@@ -84,10 +84,11 @@ In the first example, the Compute and Transfer flow takes a user-provided source
 
 2. Start the flow:
    ```bash
-   globus flows start <FLOW_ID> \
+   globus flows start <YOUR FLOW ID> \
      --input <YOUR FLOW INPUT FILE> \
      --label "Compute and Transfer Flow Example 1 Run"
    ```
+   And save the run ID for use in the next command.
 
 3. Monitor the run progress:
    ```bash
@@ -95,12 +96,12 @@ In the first example, the Compute and Transfer flow takes a user-provided source
    ```
 
 ## Compute and Transfer Flow: Example 2
-In the second example, the Compute and Transfer flow takes in a user provided list source files that exists on a user provided source collection, creates a tarfile from it, and transfers the tarfile to a user provided destination collection. Specifically, the flow will:
+In the second example, the Compute and Transfer flow takes in a user-provided list source files that exists on a user provided source collection, creates a tarfile from it, and transfers the tarfile to a user provided destination collection. Specifically, the flow will:
 1. Set constants for the run
 2. Create an output directory named after the flow's run ID on your GCS collection
 3. Iterate through the list of input source files and create the destination paths for files on your GCS collection
 4. Transfer the source paths from the user-provided source collection to the newly created output directory folder on your GCS collection
-5. Invoke the Compute function `do_tar` on the source files and create a tarfile in the output directory
+5. Invoke the Compute function `do_tar` on the source endpoint to create a tar archive from the input source files and save it in the output directory
 6. Transfer the resulting tarfile to the destination collection provided in the flow input
 7. Delete the output directory
 
@@ -125,6 +126,8 @@ In the second example, the Compute and Transfer flow takes in a user provided li
      --input-schema ./compute_transfer_examples/compute_transfer_example_2_schema.json
    ```
 
+3. Save the Flow ID returned by this command
+
 ### Running the Flow
 
 1. Create the input json file for your flow:
@@ -145,6 +148,7 @@ In the second example, the Compute and Transfer flow takes in a user provided li
      --input <YOUR FLOW INPUT FILE> \
      --label "Compute and Transfer Flow Example 2 Run"
    ```
+   And save the run ID for use in the next command.
 
 3. Monitor the run progress:
    ```bash
