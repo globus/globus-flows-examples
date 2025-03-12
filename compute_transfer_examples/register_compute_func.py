@@ -1,11 +1,10 @@
 #!/usr/bin/env python
-from typing import Union, List
+from typing import List
 
 def do_tar(
-    src_paths: Union[List[str], str],
+    src_paths: List[str],
     dest_path: str,
-    transform_from: str = "/",
-    transform_to: str = "/",
+    gcs_base_path: str = "/",
 ) -> str:
     import tarfile
     import uuid
@@ -14,33 +13,25 @@ def do_tar(
     """
     Create a tar.gz archive from source files or directories and save it to the given destination.
     
-    This function transforms provided GCS-style paths to absolute filesystem paths using the given
-    `transform_from` and `transform_to` prefixes. It verifies that all source paths exist and that the 
-    destination path is valid. If the destination is an existing directory, a unique tar.gz filename is 
-    generated. If a file path is provided (which may not exist yet), its parent directory must exist.
-    
     Parameters:
-        src_paths (Union[List[str], str]):  Source path(s) of file(s) or directory/directories to be archived.
-                                            Can be a single path string or a list of path strings.
+        src_paths (List[str]):  Source paths of files or directories to be archived.
         dest_path (str): Destination path where the tar.gz archive will be written. This can be either 
                          an existing directory or a file path (with the parent directory existing).
-        transform_from (str): The prefix in the provided paths that will be replaced. Default is "/".
-        transform_to (str): The prefix to use when converting to absolute filesystem paths. Default is "/".
+        gcs_base_path (str): The shared GCS collection's configured base path. Default is "/".
     
     Returns:
-        str: The output tar.gz file path, transformed back to the original GCS-style path.
+        str: The output tar archive file path.
     
     Raises:
         ValueError: If src_paths is empty, dest_path is None, any provided path does not begin with the expected
                     prefix, or if any source path or destination (or its parent) is invalid.
-        RuntimeError: If an error occurs during the creation of the tar.gz archive.
+        RuntimeError: If an error occurs during the creation of the tar archive.
     
     Example:
         >>> output = do_tar(
         ...     src_paths=["/file1.txt", "/dir1/file2.txt"],
         ...     dest_path="/tar_output",
-        ...     transform_from="/",
-        ...     transform_to="/path/to/root/"
+        ...     gcs_base_path="/path/to/root/"
         ... )
         >>> print(output)
         /tar_output/7f9c3f9a-2d75-4d2f-8b0a-0f0d7e6b1e3a.tar.gz
@@ -48,23 +39,19 @@ def do_tar(
 
     def transform_path_to_absolute(path: str) -> str:
         """Transform a GCS-style path to an absolute filesystem path."""
-        if not path.startswith(transform_from):
+        if not path.startswith("/"):
             raise ValueError(
-                f"Path '{path}' does not start with the expected prefix '{transform_from}'."
+                f"Path '{path}' does not start with the expected prefix '/'."
             )
-        return path.replace(transform_from, transform_to, 1)
+        return path.replace("/", gcs_base_path, 1)
 
     def transform_path_from_absolute(path: str) -> str:
         """Transform an absolute filesystem path back to a GCS-style path."""
-        if not path.startswith(transform_to):
+        if not path.startswith(gcs_base_path):
             raise ValueError(
-                f"Path '{path}' does not start with the expected prefix '{transform_to}'."
+                f"Path '{path}' does not start with the expected prefix '{gcs_base_path}'."
             )
-        return path.replace(transform_to, transform_from, 1)
-
-    # Convert single string path to a list for uniform processing
-    if isinstance(src_paths, str):
-        src_paths = [src_paths]
+        return path.replace(gcs_base_path, "/", 1)
     
     # Validate src_paths and dest_path
     if not src_paths:

@@ -5,10 +5,9 @@
       "Type": "ExpressionEval",
       "Parameters": {
         "gcs_endpoint_id": "<INSERT YOUR GCS ENDPOINT ID HERE>",
+        "gcs_base_path": "/",
         "compute_endpoint_id": "<INSERT YOUR COMPUTE ENDPOINT ID HERE>",
         "compute_function_id": "<INSERT YOUR COMPUTE FUNCTION ID HERE>",
-        "compute_transform_from": "/",
-        "compute_transform_to": "/",
         "compute_output_directory.=": "'/' + _context.run_id + '/'"
       },
       "ResultPath": "$.constants",
@@ -34,10 +33,9 @@
             "function_id.$": "$.constants.compute_function_id",
             "args": [],
             "kwargs": {
-              "src_paths.$" : "$.source_path",
+              "src_paths.$" : "$.source_paths",
               "dest_path.$" : "$.constants.compute_output_directory",
-              "transform_from.$": "$.constants.compute_transform_from",
-              "transform_to.$": "$.constants.compute_transform_to"
+              "gcs_base_path.$": "$.constants.gcs_base_path"
             }
           }
         ]

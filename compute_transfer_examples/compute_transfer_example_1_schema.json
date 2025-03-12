@@ -1,15 +1,15 @@
 {
   "type": "object",
   "required": [
-    "source_path",
+    "source_paths",
     "destination_path",
     "destination_endpoint_id"
   ],
   "properties": {
-    "source_path": {
-      "type": "string",
-      "title": "Source Collection Path",
-      "description": "The path on the source collection for the data"
+    "source_paths": {
+      "type": "array",
+      "title": "Source Collection Paths",
+      "description": "A list of paths on the source collection for the data"
     },
     "destination_path": {
       "type": "string",

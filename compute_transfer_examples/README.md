@@ -21,36 +21,31 @@ and save the Compute function's UUID.
 
 ### The `do_tar` Compute function
 
-`do_tar` takes four parameters that the flow will need to provide:
+`do_tar` takes three parameters that the flow will need to provide:
 
 | Parameter | Description |
 |-----------|-------------|
-| `src_paths` | String or list of path(s) to files/directories to archive |
-| `dest_path` | Where to write the tar.gz archive (directory or file path) |
-| `transform_from` | The path prefix to replace (default: "/") |
-| `transform_to` | The prefix to use for absolute paths (default: "/") |
+| `src_paths` | List of paths to the files/directories to be archived |
+| `dest_path` | Where to write the tar archive (directory or file path) |
+| `gcs_base_path` | The shared GCS collection's configured base path. (default: "/") |
 
-### Path Transformation Explained
+### GCS Collection Base Paths
 
-The parameters `transform_from` and `transform_to` handle differences between paths as exposed by the GCS collection and paths on the underlying filesystem.
+The parameter `gcs_base_path` is provided to the compute function to allow it to transform the user input paths to absolute paths. This is needed when the shared GCS instance has [configured the collection's base path](https://docs.globus.org/globus-connect-server/v5/data-access-guide/#configure_collection_base_path).
 
 **Example scenario:**
-- Your GCS collection maps its root to the absolute path `/path/to/root/`.
+- Your GCS collection has configured its base path to `/path/to/root/`.
 - A user wants to tar the files at the absolute path `/path/to/root/input_files/`.
 - To both the user and Flows service, this path appears as `/input_files/` on the GCS collection.
-- However, the Compute function running on the GCS collection **does not know** about the mapping and can only find the files with the absolute paths.
+- However, the Compute function running on the shared GCS instance **does not know** about the collection's configured base path and can only find the files using absolute paths.
 
-Thus, the Compute function must be provided with the GCS root mapping to do any needed transformations. In this example:
-- Set `transform_to` to the mapped root path (`/path/to/root/`) to transform the input `src_paths` to absolute paths.
-- Set `transform_from` to the root directory (`/`) to transform the absolute paths to the paths in the GCS collection.
-
-These transformations ensure the Compute function can correctly locate and access files regardless of how collection paths are mapped.
+Thus, the Compute function must be provided with the GCS collection's configured base path to do the necessary transformations. In this example, `gcs_base_path` would need to be set to `/path/to/root/`.
 
 ## Compute and Transfer Flow: Example 1
-In the first example, the Compute and Transfer flow takes a user-provided source file that already exists in the co-located GCS collection, creates a tarfile from it, and transfers the tarfile to a user provided destination collection. Specifically, the flow will:
+In the first example, the Compute and Transfer flow takes a user-provided list of source files that **already** exists in the co-located GCS collection, creates a tarfile from them, and transfers the tarfile to a user-provided destination collection. Specifically, the flow will:
 1. Set constants for the run
 2. Create an output directory named after the flow's run ID on your GCS collection
-3. Invoke the Compute function `do_tar` on the source endpoint to create a tar archive from the input source file and save it in the output directory
+3. Invoke the Compute function `do_tar` on the source endpoint to create a tar archive from the input source files and save it in the output directory
 4. Transfer the resulting tarfile to the destination collection provided in the flow input
 5. Delete the output directory
 
@@ -60,7 +55,9 @@ In the first example, the Compute and Transfer flow takes a user-provided source
    - `gcs_endpoint_id`: Your GCS Collection ID
    - `compute_endpoint_id`: Your Compute Endpoint ID
    - `compute_function_id`: The UUID of the registered `do_tar` function
-   - `compute_transform_from` and `compute_transform_to`: If your GCS collection uses [base path mapping](https://docs.globus.org/globus-connect-server/v5/data-access-guide/#configure_collection_base_path)
+
+If your GCS collection has a configured base path, also edit `gcs_base_path`.
+
 
 2. Register the flow:
    ```bash
@@ -76,7 +73,7 @@ In the first example, the Compute and Transfer flow takes a user-provided source
 1. Create the flow input json file like so:
    ```json
    {
-       "source_path": "/path/to/your/source/file",
+       "source_paths": ["/path/to/file1", "/path/to/file2"],
        "destination_path": "/path/to/your/destination/file.tar.gz",
        "destination_endpoint_id": "your-destination-endpoint-uuid"
    }
@@ -94,9 +91,15 @@ In the first example, the Compute and Transfer flow takes a user-provided source
    ```bash
    globus flows run show <RUN_ID>
    ```
+   At this point, you might see that your flow has gone INACTIVE. This is because you need to give data access consents for any GCS collection that your flow is interacting with. Run the command:
+
+   ```bash
+   globus flows run resume <RUN_ID>
+   ```
+   And you will be prompted to run a `globus session consent`. After granting the requested consent, try resuming the run once again and your flow should be able to proceed. As your flow encounters more required data access consents, you might need to repeat this step multiple times, however once you have granted a consent, it will remain for all future runs of that flow.
 
 ## Compute and Transfer Flow: Example 2
-In the second example, the Compute and Transfer flow takes in a user-provided list source files that exists on a user provided source collection, creates a tarfile from it, and transfers the tarfile to a user provided destination collection. Specifically, the flow will:
+In the second example, the Compute and Transfer flow takes in a user-provided list of source files that exist on a user-provided source collection, creates a tarfile from it, and transfers the tarfile to a user-provided destination collection. Specifically, the flow will:
 1. Set constants for the run
 2. Create an output directory named after the flow's run ID on your GCS collection
 3. Iterate through the list of input source files and create the destination paths for files on your GCS collection
@@ -154,3 +157,9 @@ In the second example, the Compute and Transfer flow takes in a user-provided li
    ```bash
    globus flows run show <RUN_ID>
    ```
+
+   Remember, if your flow has gone inactive, run:
+   ```bash
+   globus flows run resume <RUN_ID>
+   ```
+   and then run the prompted `globus session consent` command and try resuming the run again.
