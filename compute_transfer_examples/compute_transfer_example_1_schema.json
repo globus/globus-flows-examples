@@ -1,0 +1,26 @@
+{
+  "type": "object",
+  "required": [
+    "source_paths",
+    "destination_path",
+    "destination_endpoint_id"
+  ],
+  "properties": {
+    "source_paths": {
+      "type": "array",
+      "title": "Source Collection Paths",
+      "description": "A list of paths on the source collection for the data"
+    },
+    "destination_path": {
+      "type": "string",
+      "title": "Destination Collection Path",
+      "description": "The path on the destination collection for the data"
+    },
+    "destination_endpoint_id": {
+      "type": "string",
+      "title": "Destination Collection Endpoint ID",
+      "description": "The endpoint id of destination collection"
+    }
+  },
+  "additionalProperties": false
+}
