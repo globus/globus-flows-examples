@@ -12,21 +12,21 @@ def do_tar(
 
     """
     Create a tar.gz archive from source files or directories and save it to the given destination.
-    
+
     Parameters:
         src_paths (List[str]):  Source paths of files or directories to be archived.
-        dest_path (str): Destination path where the tar.gz archive will be written. This can be either 
+        dest_path (str): Destination path where the tar.gz archive will be written. This can be either
                          an existing directory or a file path (with the parent directory existing).
         gcs_base_path (str): The shared GCS collection's configured base path. Default is "/".
-    
+
     Returns:
         str: The output tar archive file path.
-    
+
     Raises:
         ValueError: If src_paths is empty, dest_path is None, any provided path does not begin with the expected
                     prefix, or if any source path or destination (or its parent) is invalid.
         RuntimeError: If an error occurs during the creation of the tar archive.
-    
+
     Example:
         >>> output = do_tar(
         ...     src_paths=["/file1.txt", "/dir1/file2.txt"],
@@ -52,7 +52,7 @@ def do_tar(
                 f"Path '{path}' does not start with the expected prefix '{gcs_base_path}'."
             )
         return path.replace(gcs_base_path, "/", 1)
-    
+
     # Validate src_paths and dest_path
     if not src_paths:
         raise ValueError("src_paths must not be empty.")
@@ -61,7 +61,7 @@ def do_tar(
 
     # Transform destination path
     transformed_dest_path = Path(transform_path_to_absolute(dest_path))
-    
+
     # Transform and validate all source paths
     transformed_src_paths = []
     for src_path in src_paths:
@@ -94,10 +94,10 @@ def do_tar(
             transformed_dest_tar_path = transformed_dest_path.with_name(fn + ".gz")
         else:
             transformed_dest_tar_path = transformed_dest_path.with_name(fn + ".tar.gz")
-    
+
     # Informative message (could be replaced with logging.info in production code)
     print(f"Creating tar file at {transformed_dest_tar_path.absolute()} with {len(transformed_src_paths)} source(s)")
-    
+
     # Create the tar.gz archive with exception handling.
     try:
         with tarfile.open(transformed_dest_tar_path, "w:gz") as tar:

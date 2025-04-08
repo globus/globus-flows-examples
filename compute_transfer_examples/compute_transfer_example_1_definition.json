@@ -1,6 +1,6 @@
 {
   "StartAt": "SetConstants",
-  "States" : {
+  "States": {
     "SetConstants": {
       "Type": "ExpressionEval",
       "Parameters": {
@@ -11,7 +11,7 @@
         "compute_output_directory.=": "'/' + _context.run_id + '/'"
       },
       "ResultPath": "$.constants",
-      "Next" : "MakeComputeWorkingDir"
+      "Next": "MakeComputeWorkingDir"
     },
     "MakeComputeWorkingDir": {
       "Type": "Action",
@@ -33,15 +33,15 @@
             "function_id.$": "$.constants.compute_function_id",
             "args": [],
             "kwargs": {
-              "src_paths.$" : "$.source_paths",
-              "dest_path.$" : "$.constants.compute_output_directory",
+              "src_paths.$": "$.source_paths",
+              "dest_path.$": "$.constants.compute_output_directory",
               "gcs_base_path.$": "$.constants.gcs_base_path"
             }
           }
         ]
       },
       "ResultPath": "$.compute_result",
-      "Next" : "TransferFromComputeEndpoint"
+      "Next": "TransferFromComputeEndpoint"
     },
     "TransferFromComputeEndpoint": {
       "Type": "Action",
@@ -57,7 +57,7 @@
         ]
       },
       "ResultPath": "$.transfer_to_dest_result",
-      "Next" : "CleanupComputeEndpoint"
+      "Next": "CleanupComputeEndpoint"
     },
     "CleanupComputeEndpoint": {
       "Type": "Action",
@@ -72,7 +72,7 @@
         ]
       },
       "ResultPath": "$.delete_compute_output_result",
-      "End" : true
+      "End": true
     }
   }
 }
