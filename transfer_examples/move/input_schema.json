@@ -1,0 +1,58 @@
+{
+  "type": "object",
+  "required": [
+    "source",
+    "destination"
+  ],
+  "properties": {
+    "source": {
+      "type": "object",
+      "title": "Source",
+      "format": "globus-collection",
+      "required": [
+        "id",
+        "path"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "Source Collection ID",
+          "format": "uuid",
+          "description": "The UUID for the collection which serves as the source of the Move"
+        },
+        "path": {
+          "type": "string",
+          "title": "Source Collection Path",
+          "description": "The path on the source collection for the data"
+        }
+      },
+      "description": "The data's origin.",
+      "additionalProperties": false
+    },
+    "destination": {
+      "type": "object",
+      "title": "Destination",
+      "format": "globus-collection",
+      "required": [
+        "id",
+        "path"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "Destination Collection ID",
+          "format": "uuid",
+          "description": "The UUID for the collection which serves as the destination for the Move"
+        },
+        "path": {
+          "type": "string",
+          "title": "Destination Collection Path",
+          "description": "The path on the destination collection where the data will be stored"
+        }
+      },
+      "description": "The destination for the data.",
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

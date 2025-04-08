@@ -1,0 +1,144 @@
+{
+  "Comment": "A Flow for performing a logical 'move' operation by first transferring from a source to a destination and then deleting from the source",
+  "StartAt": "GetSourcePathInfo",
+  "States": {
+    "GetSourcePathInfo": {
+      "Type": "Action",
+      "Comment": "Lookup the source path to determine its type (file/dir) to decide if transfer should be recursive",
+      "ActionUrl": "https://transfer.actions.globus.org/stat",
+      "Parameters": {
+        "path.$": "$.source.path",
+        "endpoint_id.$": "$.source.id"
+      },
+      "ResultPath": "$.SourceStat",
+      "Next": "GetDestinationPathInfo"
+    },
+    "GetDestinationPathInfo": {
+      "Type": "Action",
+      "Comment": "Lookup the destination path to determine its type (file/dir)",
+      "ActionUrl": "https://transfer.actions.globus.org/stat",
+      "Parameters": {
+        "path.$": "$.destination.path",
+        "endpoint_id.$": "$.destination.id"
+      },
+      "ResultPath": "$.DestinationStat",
+      "Next": "IdentifyPathTypes"
+    },
+    "IdentifyPathTypes": {
+      "Comment": "Check the paths to see if they are directories or files",
+      "Type": "ExpressionEval",
+      "Parameters": {
+        "source_is_dir.=": "SourceStat.details.type == 'dir'",
+        "dest_is_dir.=": "'type' in DestinationStat.details and DestinationStat.details.type == 'dir'",
+        "dest_exists.=": "'code' not in DestinationStat.details or DestinationStat.details.code != 'NotFound'"
+      },
+      "ResultPath": "$.PathTypes",
+      "Next": "TestPathConstraints"
+    },
+    "TestPathConstraints": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.PathTypes.dest_exists",
+          "BooleanEquals": false,
+          "Next": "ComputeDestPathNoOp"
+        },
+        {
+          "And": [
+            {
+              "Variable": "$.PathTypes.source_is_dir",
+              "BooleanEquals": true
+            },
+            {
+              "Variable": "$.PathTypes.dest_is_dir",
+              "BooleanEquals": false
+            }
+          ],
+          "Next": "FailDirOntoFile"
+        },
+        {
+          "And": [
+            {
+              "Variable": "$.PathTypes.source_is_dir",
+              "BooleanEquals": false
+            },
+            {
+              "Variable": "$.PathTypes.dest_is_dir",
+              "BooleanEquals": true
+            }
+          ],
+          "Next": "ComputeDestPathFileUnderDir"
+        }
+      ],
+      "Default": "ComputeDestPathNoOp"
+    },
+    "ComputeDestPathFileUnderDir": {
+      "Comment": "Compute the destination path for file-to-dir transfers.",
+      "Type": "ExpressionEval",
+      "Parameters": {
+        "path.=": "destination.path + source.path.rpartition('/')[2]"
+      },
+      "ResultPath": "$.ComputedDest",
+      "Next": "Transfer"
+    },
+    "ComputeDestPathNoOp": {
+      "Comment": "\"Compute\" the destination path for file-to-file and dir-to-dir transfers. This is a no-op used to match the output format of ComputeDestPathFileUnderDir.",
+      "Type": "ExpressionEval",
+      "Parameters": {
+        "path.$": "$.destination.path"
+      },
+      "ResultPath": "$.ComputedDest",
+      "Next": "Transfer"
+    },
+    "Transfer": {
+      "Type": "Action",
+      "Comment": "Run the initial transfer operation from the source to the destination",
+      "ActionUrl": "https://transfer.actions.globus.org/transfer",
+      "WaitTime": 172800,
+      "Parameters": {
+        "DATA": [
+          {
+            "source_path.$": "$.source.path",
+            "destination_path.$": "$.ComputedDest.path"
+          }
+        ],
+        "source_endpoint.$": "$.source.id",
+        "destination_endpoint.$": "$.destination.id"
+      },
+      "ResultPath": "$.TransferResult",
+      "Next": "Delete"
+    },
+    "Delete": {
+      "Type": "Action",
+      "Comment": "Delete the source path.",
+      "ActionUrl": "https://transfer.actions.globus.org/delete",
+      "WaitTime": 172800,
+      "Parameters": {
+        "DATA": [
+          {
+            "path.$": "$.source.path"
+          }
+        ],
+        "recursive": true,
+        "endpoint.$": "$.source.id"
+      },
+      "ResultPath": "$.DeleteResult",
+      "Next": "Success"
+    },
+    "FailDirOntoFile": {
+      "Comment": "Report failure due to a transfer of a directory to a file",
+      "Type": "Fail",
+      "Cause": "DirectoryOntoFile",
+      "Error": "If the source path is a directory, the destination path must also be a directory. Moving a directory to a file is not possible."
+    },
+    "Success": {
+      "Comment": "Normal completion, so report success and exit",
+      "Type": "Pass",
+      "Parameters": {
+        "message": "Move operation complete"
+      },
+      "ResultPath": "$.FlowResult",
+      "End": true
+    }
+  }
+}
