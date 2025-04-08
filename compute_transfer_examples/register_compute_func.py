@@ -1,20 +1,15 @@
 #!/usr/bin/env python
-from typing import List
 
 def do_tar(
-    src_paths: List[str],
+    src_paths: list[str],
     dest_path: str,
     gcs_base_path: str = "/",
 ) -> str:
-    import tarfile
-    import uuid
-    from pathlib import Path
-
     """
     Create a tar.gz archive from source files or directories and save it to the given destination.
 
     Parameters:
-        src_paths (List[str]):  Source paths of files or directories to be archived.
+        src_paths (list[str]):  Source paths of files or directories to be archived.
         dest_path (str): Destination path where the tar.gz archive will be written. This can be either
                          an existing directory or a file path (with the parent directory existing).
         gcs_base_path (str): The shared GCS collection's configured base path. Default is "/".
@@ -36,6 +31,10 @@ def do_tar(
         >>> print(output)
         /tar_output/7f9c3f9a-2d75-4d2f-8b0a-0f0d7e6b1e3a.tar.gz
     """
+
+    import tarfile
+    import uuid
+    from pathlib import Path
 
     def transform_path_to_absolute(path: str) -> str:
         """Transform a GCS-style path to an absolute filesystem path."""
@@ -123,4 +122,3 @@ if __name__ == "__main__":
     gcc = Client()
     do_tar_fuid = gcc.register_function(do_tar)
     print(f"Tar func UUID is {do_tar_fuid}")
-
