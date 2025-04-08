@@ -1,0 +1,28 @@
+ci:
+  autoupdate_schedule: quarterly
+
+repos:
+  - repo: meta
+    hooks:
+      - id: check-hooks-apply
+      - id: check-useless-excludes
+
+  - repo: "https://github.com/pre-commit/pre-commit-hooks"
+    rev: v5.0.0
+    hooks:
+      - id: check-merge-conflict
+      - id: trailing-whitespace
+      - id: check-json
+      - id: pretty-format-json
+        args: ["--autofix", "--no-sort-keys"]
+
+  - repo: "https://github.com/codespell-project/codespell"
+    rev: v2.4.1
+    hooks:
+      - id: codespell
+        args: ["--ignore-regex", "https://[^\\s]*"]
+
+  - repo: "https://github.com/sirosen/texthooks"
+    rev: 0.6.8
+    hooks:
+      - id: alphabetize-codeowners

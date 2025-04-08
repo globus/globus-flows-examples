@@ -1,6 +1,6 @@
 {
   "StartAt": "SetConstants",
-  "States" : {
+  "States": {
     "SetConstants": {
       "Type": "ExpressionEval",
       "Parameters": {
@@ -11,7 +11,7 @@
         "compute_output_directory.=": "'/' + _context.run_id + '/'"
       },
       "ResultPath": "$.constants",
-      "Next" : "MakeComputeWorkingDir"
+      "Next": "MakeComputeWorkingDir"
     },
     "MakeComputeWorkingDir": {
       "Type": "Action",
@@ -27,11 +27,11 @@
       "Type": "ExpressionEval",
       "Parameters": {
         "src_paths_iterator_pos": 0,
-        "compute_src_paths" : [],
+        "compute_src_paths": [],
         "transfer_from_src_data": []
       },
       "ResultPath": "$.iterator_vars",
-      "Next" : "EvalShouldIterateSourcePaths"
+      "Next": "EvalShouldIterateSourcePaths"
     },
     "EvalShouldIterateSourcePaths": {
       "Type": "ExpressionEval",
@@ -39,9 +39,9 @@
         "should_iterate.=": "len(source_paths) > iterator_vars.src_paths_iterator_pos"
       },
       "ResultPath": "$.iterate_eval",
-      "Next" : "IterateSourcePaths"
+      "Next": "IterateSourcePaths"
     },
-    "IterateSourcePaths" : {
+    "IterateSourcePaths": {
       "Type": "Choice",
       "Choices": [
         {
@@ -58,7 +58,7 @@
         "source_path.=": "source_paths[iterator_vars.src_paths_iterator_pos]"
       },
       "ResultPath": "$.get_path",
-      "Next" : "GetSourcePathInfo"
+      "Next": "GetSourcePathInfo"
     },
     "GetSourcePathInfo": {
       "Type": "Action",
@@ -68,7 +68,7 @@
         "path.$": "$.get_path.source_path"
       },
       "ResultPath": "$.source_path_stat_result",
-      "Next" : "EvalSourcePathInfo"
+      "Next": "EvalSourcePathInfo"
     },
     "EvalSourcePathInfo": {
       "Type": "ExpressionEval",
@@ -78,9 +78,9 @@
         "src_paths_iterator_pos.=": "iterator_vars.src_paths_iterator_pos + 1"
       },
       "ResultPath": "$.iterator_vars",
-      "Next" : "EvalShouldIterateSourcePaths"
+      "Next": "EvalShouldIterateSourcePaths"
     },
-    "TransferToComputeEndpoint": {  
+    "TransferToComputeEndpoint": {
       "Type": "Action",
       "ActionUrl": "https://transfer.actions.globus.org/transfer",
       "Parameters": {
@@ -89,7 +89,7 @@
         "DATA.$": "$.iterator_vars.transfer_from_src_data"
       },
       "ResultPath": "$.transfer_from_src_result",
-      "Next" : "RunComputeFunction"
+      "Next": "RunComputeFunction"
     },
     "RunComputeFunction": {
       "Type": "Action",
@@ -101,15 +101,15 @@
             "function_id.$": "$.constants.compute_function_id",
             "args": [],
             "kwargs": {
-              "src_paths.$" : "$.iterator_vars.compute_src_paths",
-              "dest_path.$" : "$.constants.compute_output_directory",
+              "src_paths.$": "$.iterator_vars.compute_src_paths",
+              "dest_path.$": "$.constants.compute_output_directory",
               "gcs_base_path.$": "$.constants.gcs_base_path"
             }
           }
         ]
       },
       "ResultPath": "$.compute_result",
-      "Next" : "TransferFromComputeEndpoint"
+      "Next": "TransferFromComputeEndpoint"
     },
     "TransferFromComputeEndpoint": {
       "Type": "Action",
@@ -140,7 +140,7 @@
         ]
       },
       "ResultPath": "$.delete_compute_output_result",
-      "End" : true
+      "End": true
     }
   }
 }
