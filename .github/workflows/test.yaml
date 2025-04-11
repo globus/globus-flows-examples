@@ -6,6 +6,21 @@ on:
   pull_request:
 
 jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-python@8d9ed9ac5c53483de85588cdf95a591a75ab9f55 # v5.5.0
+        with:
+          python-version: "3.13"
+      - name: Install tox + pre-commit
+        run: python -m pip install tox tox-uv pre-commit pre-commit-uv
+      - name: Run Lints in support/
+        working-directory: ./support
+        run: tox run -e mypy
+      - name: Run pre-commit
+        run: pre-commit run -a
   doc:
     name: Test Doc Build
     runs-on: ubuntu-latest
