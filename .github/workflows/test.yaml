@@ -1,0 +1,21 @@
+name: "🧪 Test"
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+
+jobs:
+  doc:
+    name: Test Doc Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-python@8d9ed9ac5c53483de85588cdf95a591a75ab9f55 # v5.5.0
+        with:
+          python-version: "3.13"
+      - name: Install pipx
+        run: python -m pip install pipx
+      - name: Build the Doc Bundle
+        run: |
+          pipx run ./support/build-doc-bundle.py -o doc_bundle.tar.gz
