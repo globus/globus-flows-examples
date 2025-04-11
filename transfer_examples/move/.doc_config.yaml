@@ -2,3 +2,4 @@
 example_dir: 'move_flow'
 readme_is_index: true
 append_source_blocks: true
+menu_weight: 100
