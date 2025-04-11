@@ -40,7 +40,7 @@ Use 'pipx run build-doc-bundle.py' or './build-doc-bundle.py' instead!
     help="Output filename.",
 )
 @click.command
-def main(output: str):
+def main(output: str) -> None:
     click.echo("Bundling examples for docs.globus.org", err=True)
     go_to_repo_root()
 
@@ -53,7 +53,7 @@ def main(output: str):
     click.echo(f"Done. Output is available at {output}")
 
 
-def build_all_files():
+def build_all_files() -> t.Iterator[tuple[str, bytes]]:
     all_example_configs: list[ExampleDocBuildConfig] = []
     for config_filename in find_build_configs():
         example_dir = os.path.dirname(config_filename)
@@ -63,11 +63,7 @@ def build_all_files():
         all_example_configs.append(config)
 
         if not config.readme_is_index:
-            click.echo(
-                "doc builds currently only support readme_is_index behavior",
-                err=True,
-            )
-            raise click.Abort()
+            _abort("doc builds currently only support readme_is_index behavior")
 
         for sub_path in ("definition.json", "input_schema.json", "sample_input.json"):
             with open(os.path.join(example_dir, sub_path), "rb") as fp:
@@ -81,13 +77,13 @@ def build_all_files():
     yield "index.adoc", build_index_doc(all_example_configs)
 
 
-def go_to_repo_root():
+def go_to_repo_root() -> None:
     support_dir = os.path.dirname(__file__)
     os.chdir(os.path.dirname(support_dir))
 
 
-def find_build_configs():
-    for item in glob.glob("*/**/.doc_config.yaml"):
+def find_build_configs() -> t.Iterator[str]:
+    for item in glob.glob("*/**/.doc_config.yaml", recursive=True):
         yield item
 
 
@@ -163,7 +159,7 @@ menu_weight: 180
 {% for item in examples %}
 link:{{ item.example_dir }}/[{{ item.title }}]::
 +
-{{ item.short_description | indent(first=True) | replace("\n\n", "\n+\n") }}
+{{ item.short_description | replace("\n\n", "\n+\n") }}
 {% endfor %}
 """
 )
@@ -200,9 +196,7 @@ def load_config(filename: str) -> ExampleDocBuildConfig:
     append_source_blocks: bool = _require_yaml_type(
         filename, raw_config_data, "append_source_blocks", bool
     )
-    menu_weight: bool = _require_yaml_type(
-        filename, raw_config_data, "menu_weight", int
-    )
+    menu_weight: int = _require_yaml_type(filename, raw_config_data, "menu_weight", int)
 
     return ExampleDocBuildConfig(
         title=title,
@@ -226,7 +220,7 @@ def _require_yaml_type(filename: str, data: t.Any, key: str, typ: type[T]) -> T:
     return value
 
 
-def _abort(message: str):
+def _abort(message: str) -> t.NoReturn:
     click.echo(message, err=True)
     raise click.Abort()
 
