@@ -154,6 +154,10 @@ def append_source_blocks(content: bytes) -> bytes:
 
 INDEX_TEMPLATE = jinja2.Template(
     """\
+---
+menu_weight: 180
+---
+[#flows-intro-examples]
 = Example Flows
 
 {% for item in examples %}
