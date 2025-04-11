@@ -22,6 +22,11 @@ repos:
       - id: codespell
         args: ["--ignore-regex", "https://[^\\s]*"]
 
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.33.0
+    hooks:
+      - id: check-github-workflows
+
   - repo: "https://github.com/sirosen/texthooks"
     rev: 0.6.8
     hooks:

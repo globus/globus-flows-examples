@@ -3,6 +3,10 @@ name: 📦 Package Docs
 on:
   release:
     types: [created]
+
+permissions:
+  contents: "write"
+
 jobs:
   doc:
     name: Bundle and Release Docs
