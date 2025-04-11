@@ -1,5 +1,11 @@
 # configuration for conversion to docs.globus.org
+title: 'Two Stage Globus Transfer'
+short_description: |
+    Transfer from source to intermediate and then from intermediate to
+    destination. Remove from intermediate after completion.
+
 example_dir: 'two_hop'
 readme_is_index: true
 append_source_blocks: true
+
 menu_weight: 200

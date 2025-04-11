@@ -1,0 +1,7 @@
+= Example Flows
+
+{% for item in examples %}
+link:{{ item.example_dir }}/[{{ item.title }}]::
++
+{{ item.short_description }}
+{% endfor %}
