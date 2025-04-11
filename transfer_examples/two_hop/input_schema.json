@@ -1,0 +1,83 @@
+{
+  "type": "object",
+  "required": [
+    "source",
+    "intermediate",
+    "destination"
+  ],
+  "properties": {
+    "source": {
+      "type": "object",
+      "title": "Source",
+      "format": "globus-collection",
+      "required": [
+        "id",
+        "path"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "Source Collection ID",
+          "format": "uuid",
+          "description": "The UUID for the collection which serves as the source of the data for the two-stage Transfer"
+        },
+        "path": {
+          "type": "string",
+          "title": "Source Collection Path",
+          "description": "The path on the source collection for the data"
+        }
+      },
+      "description": "The data's origin",
+      "additionalProperties": false
+    },
+    "intermediate": {
+      "type": "object",
+      "title": "Intermediate",
+      "format": "globus-collection",
+      "required": [
+        "id",
+        "path"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "Intermediate Collection ID",
+          "format": "uuid",
+          "description": "The UUID for the collection which serves as the intermediate, temporary storage for the Transfer"
+        },
+        "path": {
+          "type": "string",
+          "title": "Intermediate Collection Path",
+          "description": "The path on the intermediate collection where the data will reside until the end-to-end Transfer is complete."
+        }
+      },
+      "description": "An intermediate location used to hold data, often used to manage network usage",
+      "additionalProperties": false
+    },
+    "destination": {
+      "type": "object",
+      "title": "Destination",
+      "format": "globus-collection",
+      "required": [
+        "id",
+        "path"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "Destination Collection ID",
+          "format": "uuid",
+          "description": "The UUID for the collection which serves as the destination for the two-stage Transfer"
+        },
+        "path": {
+          "type": "string",
+          "title": "Destination Collection Path",
+          "description": "The path on the destination collection where the data will be stored"
+        }
+      },
+      "description": "The destination for the data.",
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

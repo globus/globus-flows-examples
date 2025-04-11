@@ -1,0 +1,4 @@
+# configuration for conversion to docs.globus.org
+example_dir: 'two_hop'
+readme_is_index: true
+append_source_blocks: true
