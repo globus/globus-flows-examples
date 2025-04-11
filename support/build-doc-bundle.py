@@ -163,7 +163,7 @@ menu_weight: 180
 {% for item in examples %}
 link:{{ item.example_dir }}/[{{ item.title }}]::
 +
-{{ item.short_description }}
+{{ item.short_description | indent(first=True) | replace("\n\n", "\n+\n") }}
 {% endfor %}
 """
 )

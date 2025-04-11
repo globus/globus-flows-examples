@@ -2,9 +2,10 @@
 title: 'Move (copy and delete) files'
 short_description: |
     Perform a 'move' operation on a directory by first transferring from a
-    source to a destination and then deleting from the source. The entire
-    directory's contents, including files and subdirectories, will be copied to
-    the destination and then deleted from the source.
+    source to a destination and then deleting from the source.
+
+    The entire directory's contents, including files and subdirectories, will
+    be copied to the destination and then deleted from the source.
 
 example_dir: 'move_flow'
 readme_is_index: true
