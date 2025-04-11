@@ -11,7 +11,6 @@ import dataclasses
 import glob
 import io
 import os
-import subprocess
 import tarfile
 import textwrap
 
@@ -78,10 +77,8 @@ def build_all_files():
 
 
 def go_to_repo_root():
-    git_proc = subprocess.run(
-        ["git", "rev-parse", "--show-toplevel"], capture_output=True
-    )
-    os.chdir(git_proc.stdout.strip())
+    support_dir = os.path.dirname(__file__)
+    os.chdir(os.path.dirname(support_dir))
 
 
 def find_build_configs():
