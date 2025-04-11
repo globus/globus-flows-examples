@@ -6,31 +6,21 @@ on:
   pull_request:
 
 jobs:
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      - uses: actions/setup-python@8d9ed9ac5c53483de85588cdf95a591a75ab9f55 # v5.5.0
-        with:
-          python-version: "3.13"
-      - name: Install tox + pre-commit
-        run: python -m pip install tox tox-uv pre-commit pre-commit-uv
-      - name: Run Lints in support/
-        working-directory: ./support
-        run: tox run -e mypy
-      - name: Run pre-commit
-        run: pre-commit run -a
-  doc:
-    name: Test Doc Build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      - uses: actions/setup-python@8d9ed9ac5c53483de85588cdf95a591a75ab9f55 # v5.5.0
-        with:
-          python-version: "3.13"
-      - name: Install pipx
-        run: python -m pip install pipx
-      - name: Build the Doc Bundle
-        run: |
-          pipx run ./support/build-doc-bundle.py -o doc_bundle.tar.gz
+  test:
+    name: "${{ matrix.name }}"
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: "Test"
+            runner: "ubuntu-latest"
+            cpythons:
+              - "3.13"
+            tox-environments:
+              - "mypy"
+              - "build_doc_bundle"
+            cache-paths:
+              - ".mypy_cache/"
+    uses: "globus/workflows/.github/workflows/tox.yaml@f41714f6a8b102569807b348fce50960f9617df8" # v1.2
+    with:
+      config: "${{ toJSON(matrix) }}"
