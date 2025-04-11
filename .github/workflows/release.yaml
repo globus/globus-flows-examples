@@ -1,5 +1,5 @@
 # build and release new docs as a release asset
-name: Release Docs
+name: 📦 Package Docs
 on:
   release:
     types: [created]
@@ -21,5 +21,4 @@ jobs:
       - name: Upload Doc Bundle
         env:
           GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
         run: gh release upload "${{ github.ref_name }}" doc_bundle.tar.gz
