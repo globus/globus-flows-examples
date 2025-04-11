@@ -1,0 +1,26 @@
+{
+  "required": [
+    "source"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "source": {
+      "title": "File to submit for approval",
+      "description": "The file selected here will be reviewed prior to transfer. Note that the source collection must be a Guest Collection that you have the ability to add permissions to.",
+      "type": "object",
+      "format": "globus-collection",
+      "required": [
+        "id",
+        "path"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
