@@ -1,25 +1,30 @@
 #!/usr/bin/env python
 
+
 def do_tar(
     src_paths: list[str],
     dest_path: str,
     gcs_base_path: str = "/",
 ) -> str:
     """
-    Create a tar.gz archive from source files or directories and save it to the given destination.
+    Create a tar.gz archive from source files or directories and save it to the
+    given destination.
 
     Parameters:
         src_paths (list[str]):  Source paths of files or directories to be archived.
-        dest_path (str): Destination path where the tar.gz archive will be written. This can be either
-                         an existing directory or a file path (with the parent directory existing).
-        gcs_base_path (str): The shared GCS collection's configured base path. Default is "/".
+        dest_path (str): Destination path where the tar.gz archive will be
+                         written. This can be either an existing directory or a
+                         file path (with the parent directory existing).
+        gcs_base_path (str): The shared GCS collection's configured base path.
+                             Default is "/".
 
     Returns:
         str: The output tar archive file path.
 
     Raises:
-        ValueError: If src_paths is empty, dest_path is None, any provided path does not begin with the expected
-                    prefix, or if any source path or destination (or its parent) is invalid.
+        ValueError: If src_paths is empty, dest_path is None, any provided path
+                    does not begin with the expected prefix, or if any source
+                    path or destination (or its parent) is invalid.
         RuntimeError: If an error occurs during the creation of the tar archive.
 
     Example:
@@ -48,7 +53,8 @@ def do_tar(
         """Transform an absolute filesystem path back to a GCS-style path."""
         if not path.startswith(gcs_base_path):
             raise ValueError(
-                f"Path '{path}' does not start with the expected prefix '{gcs_base_path}'."
+                f"Path '{path}' does not start with "
+                f"the expected prefix '{gcs_base_path}'."
             )
         return path.replace(gcs_base_path, "/", 1)
 
@@ -72,7 +78,9 @@ def do_tar(
     # Validate transformed_dest_path
     if transformed_dest_path.exists():
         if not (transformed_dest_path.is_dir() or transformed_dest_path.is_file()):
-            raise ValueError(f"Destination path '{dest_path}' is neither a directory nor a file.")
+            raise ValueError(
+                f"Destination path '{dest_path}' is neither a directory nor a file."
+            )
     else:
         if not transformed_dest_path.parent.exists():
             raise ValueError(
@@ -95,7 +103,10 @@ def do_tar(
             transformed_dest_tar_path = transformed_dest_path.with_name(fn + ".tar.gz")
 
     # Informative message (could be replaced with logging.info in production code)
-    print(f"Creating tar file at {transformed_dest_tar_path.absolute()} with {len(transformed_src_paths)} source(s)")
+    print(
+        f"Creating tar file at {transformed_dest_tar_path.absolute()} "
+        f"with {len(transformed_src_paths)} source(s)"
+    )
 
     # Create the tar.gz archive with exception handling.
     try:
@@ -108,11 +119,16 @@ def do_tar(
             try:
                 transformed_dest_tar_path.unlink()
             except Exception as unlink_err:
-                print(f"Warning: Failed to remove incomplete tar file '{transformed_dest_tar_path}': {unlink_err}")
+                print(
+                    f"Warning: Failed to remove incomplete tar file "
+                    f"'{transformed_dest_tar_path}': {unlink_err}"
+                )
         raise RuntimeError(f"Failed to create tar archive: {e}") from e
 
     # Transform the output path back to a GCS-style path and return.
-    result_path = transform_path_from_absolute(str(transformed_dest_tar_path.absolute()))
+    result_path = transform_path_from_absolute(
+        str(transformed_dest_tar_path.absolute())
+    )
     return result_path
 
 
