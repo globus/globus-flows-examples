@@ -11,6 +11,7 @@ import dataclasses
 import glob
 import io
 import os
+import pathlib
 import tarfile
 import textwrap
 import typing as t
@@ -31,18 +32,23 @@ Use 'pipx run build-doc-bundle.py' or './build-doc-bundle.py' instead!
     )
     raise SystemExit(1)
 
+HERE = pathlib.Path(__file__).parent
+REPO_ROOT = HERE.parent
+
 
 @click.option(
     "-o",
     "--output",
     default="doc_bundle.tar.gz",
-    type=click.Path(writable=True, dir_okay=False, resolve_path=True),
+    type=click.Path(
+        writable=True, dir_okay=False, resolve_path=True, path_type=pathlib.Path
+    ),
     help="Output filename.",
 )
 @click.command
-def main(output: str) -> None:
+def main(output: pathlib.Path) -> None:
     click.echo("Bundling examples for docs.globus.org", err=True)
-    go_to_repo_root()
+    os.chdir(REPO_ROOT)
 
     with tarfile.open(output, "w:gz") as archive:
         for filename, file_bytes in build_all_files():
@@ -55,20 +61,20 @@ def main(output: str) -> None:
 
 def build_all_files() -> t.Iterator[tuple[str, bytes]]:
     all_example_configs: list[ExampleDocBuildConfig] = []
-    for config_filename in find_build_configs():
-        example_dir = os.path.dirname(config_filename)
-        click.echo(f"building for {example_dir}", err=True)
+    for config_file in find_build_configs():
+        source_dir = config_file.parent
+        click.echo(f"building for {source_dir}", err=True)
 
-        config = load_config(config_filename)
+        config = load_config(config_file)
         all_example_configs.append(config)
 
         if not config.readme_is_index:
             _abort("doc builds currently only support readme_is_index behavior")
 
         for sub_path in ("definition.json", "input_schema.json", "sample_input.json"):
-            with open(os.path.join(example_dir, sub_path), "rb") as fp:
+            with open(source_dir / sub_path, "rb") as fp:
                 yield f"{config.example_dir}/{sub_path}", fp.read()
-        with open(os.path.join(example_dir, "README.adoc"), "rb") as fp:
+        with open(source_dir / "README.adoc", "rb") as fp:
             content = fp.read()
             if config.append_source_blocks:
                 content = append_source_blocks(content)
@@ -77,14 +83,9 @@ def build_all_files() -> t.Iterator[tuple[str, bytes]]:
     yield "index.adoc", build_index_doc(all_example_configs)
 
 
-def go_to_repo_root() -> None:
-    support_dir = os.path.dirname(__file__)
-    os.chdir(os.path.dirname(support_dir))
-
-
-def find_build_configs() -> t.Iterator[str]:
+def find_build_configs() -> t.Iterator[pathlib.Path]:
     for item in glob.glob("*/**/.doc_config.yaml", recursive=True):
-        yield item
+        yield pathlib.Path(item)
 
 
 def prepend_preamble(config: ExampleDocBuildConfig, content: bytes) -> bytes:
@@ -180,8 +181,9 @@ class ExampleDocBuildConfig:
     menu_weight: int
 
 
-def load_config(filename: str) -> ExampleDocBuildConfig:
-    with open(filename, "rb") as fp:
+def load_config(config_file: pathlib.Path) -> ExampleDocBuildConfig:
+    filename: str = str(config_file)
+    with open(config_file, "rb") as fp:
         raw_config_data = yaml.load(fp, Loader=yaml.Loader)
 
     title: str = _require_yaml_type(filename, raw_config_data, "title", str)
