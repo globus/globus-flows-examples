@@ -1,0 +1,267 @@
+{
+  "Comment": "Request approval to transfer a file from the requester's Guest Collection into a destination collection. If approved, a transfer will be performed using the flow's identity (meaning the flow itself will need write access on the destination collection).",
+  "StartAt": "GetSourceCollectionInfo",
+  "States": {
+    "GetSourceCollectionInfo": {
+      "Type": "Action",
+      "Next": "ValidateSourceCollectionType",
+      "ActionUrl": "https://transfer.actions.globus.org/collection_info",
+      "ResultPath": "$.collection_info",
+      "Parameters": {
+        "endpoint_id.$": "$.source.id"
+      }
+    },
+    "ValidateSourceCollectionType": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.collection_info.details.entity_type",
+          "StringEquals": "GCSv5_guest_collection",
+          "Next": "GetSourcePathInfo"
+        }
+      ],
+      "Default": "FailSourceCollectionType"
+    },
+    "GetSourcePathInfo": {
+      "Type": "Action",
+      "Next": "ValidateSourcePathType",
+      "ActionUrl": "https://transfer.actions.globus.org/stat",
+      "Parameters": {
+        "endpoint_id.$": "$.source.id",
+        "path.$": "$.source.path"
+      },
+      "ResultPath": "$.source_stat"
+    },
+    "ValidateSourcePathType": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.source_stat.details.type",
+          "StringEquals": "file",
+          "Next": "SetupEmailLoop"
+        }
+      ],
+      "Default": "FailSourcePathType"
+    },
+    "SetupEmailLoop": {
+      "Comment": "Each random ID for each `reviewer` should be unique and unguessable, and `loop_end` should match the number of `reviewers` defined here.",
+      "Type": "Pass",
+      "Next": "SendEmail",
+      "Parameters": {
+        "__Private_Parameters": [
+          "reviewers",
+          "loop_index",
+          "loop_end"
+        ],
+        "reviewers": [
+          {
+            "email": "reviewer1@domain.example",
+            "random_id": "e8c63401"
+          },
+          {
+            "email": "reviewer2@domain.example",
+            "random_id": "7fc71f01"
+          }
+        ],
+        "loop_index": 0,
+        "loop_end": 2
+      },
+      "ResultPath": "$._private_state"
+    },
+    "SendEmail": {
+      "Type": "Action",
+      "Next": "IncrementLoopIndex",
+      "ActionUrl": "https://actions.globus.org/notification/notify",
+      "ResultPath": "$._private_email_result",
+      "Parameters": {
+        "__Private_Parameters": [
+          "body_mimetype",
+          "body_template",
+          "body_variables",
+          "destination",
+          "send_credentials",
+          "sender",
+          "subject"
+        ],
+        "body_mimetype": "text/html",
+        "body_template": "<p>The following file has been submitted for review. It must be approved before it can be transferred.</p><p><table><tr><td>Submitter</td><td><code>${SUBMITTER}</code></td></tr><tr><td>Filename</td><td><code>${FILE_NAME}</code></td></tr><tr><td>Size (bytes)</td><td><code>${FILE_SIZE}</code></td></tr></table></p><p><ul><li><a href=\"${APPROVAL_URL}\">\u2705 Approve transfer</a></li><li><a href=\"${REJECTION_URL}\">\u274c Reject transfer</a></li></ul></p>",
+        "body_variables": {
+          "FILE_NAME.$": "$.source_stat.details.name",
+          "FILE_SIZE.$": "$.source_stat.details.size",
+          "SUBMITTER.=": "(_context.username + ' &lt;' + _context.email + '&gt;') if _context.email and (_context.username != _context.email) else _context.username",
+          "APPROVAL_URL.=": "'https://actions.globus.org/weboption/option/' + _context.run_id + '-' + _private_state.reviewers[_private_state.loop_index].random_id + '-approve'",
+          "REJECTION_URL.=": "'https://actions.globus.org/weboption/option/' + _context.run_id + '-' + _private_state.reviewers[_private_state.loop_index].random_id + '-reject'"
+        },
+        "destination.=": "_private_state.reviewers[_private_state.loop_index].email",
+        "send_credentials": [
+          {
+            "credential_type": "smtp",
+            "credential_value": {
+              "hostname": "smtp.domain.example",
+              "username": "email@domain.example",
+              "password": "email-password",
+              "port": 587
+            }
+          }
+        ],
+        "sender": "flows@domain.example",
+        "subject": "Approval needed for file transfer"
+      }
+    },
+    "IncrementLoopIndex": {
+      "Type": "ExpressionEval",
+      "Next": "ExitEmailLoop",
+      "Parameters": {
+        "__Private_Parameters": [
+          "reviewers",
+          "loop_index",
+          "loop_end"
+        ],
+        "reviewers.$": "$._private_state.reviewers",
+        "loop_index.=": "_private_state.loop_index + 1",
+        "loop_end.$": "$._private_state.loop_end"
+      },
+      "ResultPath": "$._private_state"
+    },
+    "ExitEmailLoop": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$._private_state.loop_index",
+          "NumericLessThanPath": "$._private_state.loop_end",
+          "Next": "SendEmail"
+        }
+      ],
+      "Default": "AddOptions"
+    },
+    "AddOptions": {
+      "Type": "ExpressionEval",
+      "Parameters": {
+        "__Private_Parameters": [
+          "options"
+        ],
+        "options.=": "[{'name': word, 'url_suffix': _context.run_id + '-' + reviewer.random_id + '-' + word} for reviewer in _private_state.reviewers for word in ['approve', 'reject']]"
+      },
+      "ResultPath": "$._private_state",
+      "Next": "WaitForApproval"
+    },
+    "WaitForApproval": {
+      "Type": "Action",
+      "Next": "DetermineOutcome",
+      "ActionUrl": "https://actions.globus.org/weboption/wait_for_option",
+      "Parameters": {
+        "__Private_Parameters": [
+          "options"
+        ],
+        "options.$": "$._private_state.options"
+      },
+      "ResultPath": "$._private_judgement"
+    },
+    "DetermineOutcome": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$._private_judgement.details.name",
+          "StringEquals": "approve",
+          "Next": "GetExistingPathPermissions"
+        }
+      ],
+      "Default": "SubmissionRejected"
+    },
+    "GetExistingPathPermissions": {
+      "Type": "Action",
+      "Next": "CalculateAvailablePermissions",
+      "ActionUrl": "https://transfer.actions.globus.org/manage_permission",
+      "ResultPath": "$.permission_list",
+      "Parameters": {
+        "operation": "LIST",
+        "endpoint_id.$": "$.source.id"
+      }
+    },
+    "CalculateAvailablePermissions": {
+      "Type": "ExpressionEval",
+      "Next": "DetermineWhetherToCreatePermission",
+      "ResultPath": "$.permission_judgement",
+      "Parameters": {
+        "access_id.=": "([permission['id'] for permission in permission_list.details.DATA if permission['principal'] == _context.flow_id and permission['principal_type'] == 'identity' and permission['path'] == source.path.rsplit('/', 1)[0] + '/'] or [''])[0]"
+      }
+    },
+    "DetermineWhetherToCreatePermission": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.permission_judgement.access_id",
+          "StringEquals": "",
+          "Next": "CreatePermission"
+        }
+      ],
+      "Default": "TransferFile"
+    },
+    "CreatePermission": {
+      "Type": "Action",
+      "Next": "TransferFile",
+      "ActionUrl": "https://transfer.actions.globus.org/manage_permission",
+      "ResultPath": "$.permission_creation",
+      "Parameters": {
+        "operation": "CREATE",
+        "endpoint_id.$": "$.source.id",
+        "path.=": "source.path.rsplit('/')[0] + '/'",
+        "principal.$": "$._context.flow_id",
+        "principal_type": "identity",
+        "permissions": "r"
+      }
+    },
+    "TransferFile": {
+      "Comment": "The destination_path injects the requesting user's ID into the filename to help prevent other files from getting erased.",
+      "Type": "Action",
+      "RunAs": "Flow",
+      "ResultPath": "$._private_transfer_result",
+      "Next": "DeletePermission",
+      "ActionUrl": "https://transfer.actions.globus.org/transfer",
+      "Parameters": {
+        "__Private_Parameters": [
+          "source_endpoint",
+          "destination_endpoint",
+          "DATA"
+        ],
+        "source_endpoint.$": "$.source.id",
+        "destination_endpoint": "00000000-bacb-424d-bbbe-be786aacd771",
+        "DATA": [
+          {
+            "source_path.$": "$.source.path",
+            "destination_path.=": "'/Inbox/' + _context.user_id.split(':')[-1] + '-' + source_stat.details.name"
+          }
+        ]
+      }
+    },
+    "DeletePermission": {
+      "Type": "Action",
+      "Next": "SubmissionAccepted",
+      "ActionUrl": "https://transfer.actions.globus.org/manage_permission",
+      "ResultPath": "$.permission_deletion",
+      "Parameters": {
+        "operation": "DELETE",
+        "endpoint_id.$": "$.source.id",
+        "rule_id.=": "permission_judgement.access_id or permission_creation.details.access_id"
+      }
+    },
+    "FailSourceCollectionType": {
+      "Type": "Fail",
+      "Error": "IncorrectSourceCollectionType",
+      "Cause": "The source collection must be a Guest Collection"
+    },
+    "FailSourcePathType": {
+      "Type": "Fail",
+      "Error": "IncorrectSourcePathType",
+      "Cause": "Only files may be selected when using this flow."
+    },
+    "SubmissionRejected": {
+      "Type": "Pass",
+      "End": true
+    },
+    "SubmissionAccepted": {
+      "Type": "Pass",
+      "End": true
+    }
+  }
+}

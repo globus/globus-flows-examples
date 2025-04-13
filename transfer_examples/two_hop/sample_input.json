@@ -1,0 +1,14 @@
+{
+  "source": {
+    "id": "6c54cade-bde5-45c1-bdea-f4bd71dba2cc",
+    "path": "/~/ep1-example-directory/"
+  },
+  "intermediate": {
+    "id": "31ce9ba0-176d-45a5-add3-f37d233ba47d",
+    "path": "/~/ep2-intermediate-directory/"
+  },
+  "destination": {
+    "id": "6c54cade-bde5-45c1-bdea-f4bd71dba2cc",
+    "path": "/~/ep1-duplicate-example-directory/"
+  }
+}

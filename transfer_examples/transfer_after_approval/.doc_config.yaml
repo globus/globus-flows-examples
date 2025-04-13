@@ -1,0 +1,11 @@
+# configuration for conversion to docs.globus.org
+title: 'Transfer After Approval'
+short_description: |
+    Allow users to submit an approval request to transfer a file to a
+    destination Guest Collection.
+
+example_dir: 'transfer_after_approval'
+readme_is_index: true
+append_source_blocks: true
+
+menu_weight: 300

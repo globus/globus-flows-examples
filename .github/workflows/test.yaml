@@ -1,0 +1,26 @@
+name: "🧪 Test"
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+
+jobs:
+  test:
+    name: "${{ matrix.name }}"
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: "Test"
+            runner: "ubuntu-latest"
+            cpythons:
+              - "3.13"
+            tox-environments:
+              - "mypy"
+              - "build_doc_bundle"
+            cache-paths:
+              - ".mypy_cache/"
+    uses: "globus/workflows/.github/workflows/tox.yaml@f41714f6a8b102569807b348fce50960f9617df8" # v1.2
+    with:
+      config: "${{ toJSON(matrix) }}"

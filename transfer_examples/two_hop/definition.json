@@ -1,0 +1,199 @@
+{
+  "Comment": "Transfer from a source collection to a destination collection using an intermediary collection",
+  "StartAt": "GetSourcePathInfo",
+  "States": {
+    "GetSourcePathInfo": {
+      "Comment": "Get the source path info",
+      "Type": "Action",
+      "ActionUrl": "https://transfer.actions.globus.org/stat",
+      "Parameters": {
+        "endpoint_id.$": "$.source.id",
+        "path.$": "$.source.path"
+      },
+      "ResultPath": "$.SourceStat",
+      "Next": "GetIntermediatePathInfo"
+    },
+    "GetIntermediatePathInfo": {
+      "Comment": "Get the intermediate path info",
+      "Type": "Action",
+      "ActionUrl": "https://transfer.actions.globus.org/stat",
+      "Parameters": {
+        "endpoint_id.$": "$.intermediate.id",
+        "path.$": "$.intermediate.path"
+      },
+      "ResultPath": "$.IntermediateStat",
+      "Next": "GetDestinationPathInfo"
+    },
+    "GetDestinationPathInfo": {
+      "Comment": "Get the destination path info",
+      "Type": "Action",
+      "ActionUrl": "https://transfer.actions.globus.org/stat",
+      "Parameters": {
+        "endpoint_id.$": "$.destination.id",
+        "path.$": "$.destination.path"
+      },
+      "ResultPath": "$.DestinationStat",
+      "Next": "IdentifyPathTypes"
+    },
+    "IdentifyPathTypes": {
+      "Comment": "Check the paths to see if they are directories or files",
+      "Type": "ExpressionEval",
+      "Parameters": {
+        "source_is_dir.=": "SourceStat.details.type == 'dir'",
+        "intermediate_is_dir.=": "'type' in IntermediateStat.details and IntermediateStat.details.type == 'dir'",
+        "dest_is_dir.=": "'type' in DestinationStat.details and DestinationStat.details.type == 'dir'",
+        "dest_exists.=": "'code' not in DestinationStat.details or DestinationStat.details.code != 'NotFound'",
+        "source_is_default_dir.=": "source.path == '/~/'",
+        "source_is_root.=": "source.path == '/'"
+      },
+      "ResultPath": "$.PathTypes",
+      "Next": "TestPathConstraints"
+    },
+    "TestPathConstraints": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.PathTypes.intermediate_is_dir",
+          "BooleanEquals": false,
+          "Next": "FailIntermediateMustBeDir"
+        },
+        {
+          "Variable": "$.PathTypes.dest_exists",
+          "BooleanEquals": false,
+          "Next": "ComputeIntermediatePath"
+        },
+        {
+          "And": [
+            {
+              "Variable": "$.PathTypes.source_is_dir",
+              "BooleanEquals": true
+            },
+            {
+              "Variable": "$.PathTypes.dest_is_dir",
+              "BooleanEquals": false
+            }
+          ],
+          "Next": "FailSourceDestMismatchType"
+        },
+        {
+          "And": [
+            {
+              "Variable": "$.PathTypes.source_is_dir",
+              "BooleanEquals": false
+            },
+            {
+              "Variable": "$.PathTypes.dest_is_dir",
+              "BooleanEquals": true
+            }
+          ],
+          "Next": "FailSourceDestMismatchType"
+        }
+      ],
+      "Default": "ComputeIntermediatePath"
+    },
+    "ComputeIntermediatePath": {
+      "Comment": "Determine the intermediate path based on the source path characteristics.",
+      "Type": "ExpressionEval",
+      "Parameters": {
+        "basename.=": "source.path.rpartition('/')[2] if not PathTypes.source_is_dir else 'DEFAULT' if PathTypes.source_is_default_dir else 'ROOT' if PathTypes.source_is_root else source.path.split('/')[-2]"
+      },
+      "ResultPath": "$.ComputedIntermediatePath",
+      "Next": "ComputeTaskData"
+    },
+    "ComputeTaskData": {
+      "Comment": "Compute paths and labels",
+      "Type": "ExpressionEval",
+      "Parameters": {
+        "intermediate_dir.=": "intermediate.path.rstrip('/') + '/' + _context.run_id + '/'",
+        "intermediate_path.=": "intermediate.path.rstrip('/') + '/' + _context.run_id + '/' + ComputedIntermediatePath.basename"
+      },
+      "ResultPath": "$.ComputedTaskData",
+      "Next": "MakeIntermediateDir"
+    },
+    "MakeIntermediateDir": {
+      "Comment": "Create a temp directory on the intermediate to hold the data",
+      "Type": "Action",
+      "ActionUrl": "https://transfer.actions.globus.org/mkdir",
+      "Parameters": {
+        "endpoint_id.$": "$.intermediate.id",
+        "path.$": "$.ComputedTaskData.intermediate_dir"
+      },
+      "ResultPath": "$.MkdirResult",
+      "Next": "Transfer1"
+    },
+    "Transfer1": {
+      "Comment": "Run the initial transfer operation from the source collection to the intermediate collection",
+      "Type": "Action",
+      "ActionUrl": "https://transfer.actions.globus.org/transfer",
+      "WaitTime": 172800,
+      "Parameters": {
+        "source_endpoint.$": "$.source.id",
+        "destination_endpoint.$": "$.intermediate.id",
+        "DATA": [
+          {
+            "source_path.$": "$.source.path",
+            "destination_path.$": "$.ComputedTaskData.intermediate_path"
+          }
+        ]
+      },
+      "ResultPath": "$.Transfer1Result",
+      "Next": "Transfer2"
+    },
+    "Transfer2": {
+      "Comment": "Run the second transfer operation from the intermediate collection to the destination collection",
+      "Type": "Action",
+      "ActionUrl": "https://transfer.actions.globus.org/transfer",
+      "WaitTime": 172800,
+      "Parameters": {
+        "source_endpoint.$": "$.intermediate.id",
+        "destination_endpoint.$": "$.destination.id",
+        "DATA": [
+          {
+            "source_path.=": "ComputedTaskData.intermediate_path",
+            "destination_path.$": "$.destination.path"
+          }
+        ]
+      },
+      "ResultPath": "$.Transfer2Result",
+      "Next": "Delete"
+    },
+    "Delete": {
+      "Comment": "Delete the data from the intermediate collection",
+      "Type": "Action",
+      "ActionUrl": "https://transfer.actions.globus.org/delete",
+      "WaitTime": 172800,
+      "Parameters": {
+        "endpoint.$": "$.intermediate.id",
+        "recursive": true,
+        "DATA": [
+          {
+            "path.$": "$.ComputedTaskData.intermediate_dir"
+          }
+        ]
+      },
+      "ResultPath": "$.DeleteResult",
+      "Next": "Success"
+    },
+    "FailSourceDestMismatchType": {
+      "Comment": "Report failure due to a transfer of a directory to a file or vice-versa",
+      "Type": "Fail",
+      "Cause": "SourceDestMismatchType",
+      "Error": "If the source is a directory, the destination must be a directory. And if the source is a file, the destination must be a file."
+    },
+    "FailIntermediateMustBeDir": {
+      "Comment": "Report failure due to a transfer to a file or nonexistent dest on the intermediate collection",
+      "Type": "Fail",
+      "Cause": "IntermediateIsFile",
+      "Error": "The intermediate path must be a directory and must exist prior to use."
+    },
+    "Success": {
+      "Comment": "Normal completion, so report success and exit",
+      "Type": "Pass",
+      "Parameters": {
+        "message": "Two Stage Transfer complete"
+      },
+      "ResultPath": "$.FlowResult",
+      "End": true
+    }
+  }
+}

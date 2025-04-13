@@ -22,7 +22,26 @@ repos:
       - id: codespell
         args: ["--ignore-regex", "https://[^\\s]*"]
 
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.33.0
+    hooks:
+      - id: check-github-workflows
+
   - repo: "https://github.com/sirosen/texthooks"
     rev: 0.6.8
     hooks:
       - id: alphabetize-codeowners
+
+  - repo: https://github.com/psf/black-pre-commit-mirror
+    rev: 25.1.0
+    hooks:
+      - id: black
+
+  - repo: https://github.com/PyCQA/flake8
+    rev: 7.2.0
+    hooks:
+      - id: flake8
+        additional_dependencies:
+          - 'flake8-bugbear==24.12.12'
+          - 'flake8-comprehensions==3.16.0'
+          - 'flake8-typing-as-t==1.0.0'

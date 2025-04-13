@@ -1,0 +1,80 @@
+= Transfer After Approval
+
+== Description
+
+Allow users to submit an approval request to transfer a file to a destination Guest Collection.
+
+The request will come in the form of emails to curators who are authorized to approve the transfer.
+If approved, the file will be transferred using the flow's own identity -- not the user's --
+ensuring that users do not need permission to read or write to the destination collection.
+
+Users who run the flow will not be informed who the curators/approvers are,
+nor will they be informed by the flow itself where the file is transferred to.
+They only need to know that "this flow allows you to submit a file for transfer."
+
+Example uses include:
+
+* Allowing researchers to submit research data and findings for consideration and publication.
+* Accepting vulnerability analyses from unknown sources.
+
+== Highlights
+
+This flow has several technical highlights.
+
+*   `__Private_Parameters` and `_private` parameter prefixes are used throughout.
+This helps restrict visibility of private information (such as email addresses and SMTP credentials)
+when users view the flow definition as well as while the flow runs.
++
+For more information, see link:https://docs.globus.org/api/flows/authoring-flows/secrets/[Protecting Secrets]
+in the Authoring Flows documentation.
+
+*   By setting the `RunAs` value in the `TransferFile` state,
+the transfer operation will be performed using the flow's own identity
+to access the destination collection.
+This allows the flow to be made public -- and run by any user --
+without having to give individual users write permission on the destination collection.
+
+== Prerequisites
+
+The flow definition must be modified before using it to create a new flow.
+It also has several requirements when running.
+
+=== Modification requirements
+
+*   The `SetupEmailLoop` state must be modified.
+The email addresses of approvers must be updated, and unique IDs must be assigned to each reviewer.
+Finally, the `loop_end` value must be updated to match the number of approvers.
+
+*   The `SendEmail` state must be modified.
+Specifically, the SMTP hostname, username, and password in `send_credentials` must be updated,
+as well as the email address in `sender`.
++
+It is also possible to use an AWS SES credential for sending emails.
+See link:https://docs.globus.org/api/flows/hosted-action-providers/ap-notification-notify/[the Notification action provider documentation] for more details.
+
+*   The `TransferFile` state must be modified.
+The `destination_endpoint` must be set to the destination Guest Collection ID that will receive approved files,
+and the `destination_path` should match the target directory you want approved files transferred to.
+
+=== Execution requirements
+
+*   After modifying the flow definition and creating the flow in the Globus Flows service,
+a destination collection administrator must give the flow client write permission on the collection.
++
+This can be accomplished in the Web App, in the destination collection's Permissions tab,
+by clicking the "Add Permissions" button and searching for the flow ID as the username to share with,
+and ensuring that the "Write" checkbox is checked.
++
+It's also possible to use the Globus CLI to accomplish this,
+using the `globus endpoint role create` command:
++
+[source,bash]
+----
+globus endpoint permission create $DESTINATION_COLLECTION_ID:/ --permissions rw --identity $FLOW_ID
+----
+
+*   Users who seek approval to transfer a file must select a file on a Guest Collection
+on which they can grant new permissions.
+
+These execution requirements allow the flow -- _acting as the user_ -- to give itself read permission on the user's guest collection,
+and then -- _acting as the flow itself_ -- to transfer the user's file to the destination collection.
