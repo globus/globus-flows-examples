@@ -5,7 +5,8 @@ short_description: |
     destination Guest Collection.
 
 example_dir: 'transfer_after_approval'
-readme_is_index: true
+index_source:
+  copy: "README.adoc"
 append_source_blocks: true
 
 menu_weight: 300

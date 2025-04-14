@@ -1,0 +1,81 @@
+{
+  "title": ".doc_config.yaml Validation Schema",
+  "description": "This schema describes the shape of our internal doc configs. It is used to validate configs so that the build script doesn't need to do this checking.",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "unevaluatedProperties": false,
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "short_description": {
+      "type": "string"
+    },
+    "example_dir": {
+      "type": "string"
+    },
+    "index_source": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/index_source_copy"
+        },
+        {
+          "$ref": "#/$defs/index_source_concat"
+        }
+      ]
+    },
+    "append_source_blocks": {
+      "type": "boolean"
+    },
+    "menu_weight": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "title",
+    "short_description",
+    "example_dir",
+    "index_source",
+    "append_source_blocks",
+    "menu_weight"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "index_source_copy": {
+      "type": "object",
+      "properties": {
+        "copy": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "copy"
+      ],
+      "additionalProperties": false
+    },
+    "index_source_concat": {
+      "type": "object",
+      "properties": {
+        "concat": {
+          "type": "object",
+          "properties": {
+            "files": {
+              "$ref": "#/$defs/string_array",
+              "minItems": 1
+            }
+          },
+          "required": [
+            "files"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "string_array": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

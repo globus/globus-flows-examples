@@ -26,6 +26,10 @@ repos:
     rev: 0.33.0
     hooks:
       - id: check-github-workflows
+      - id: check-jsonschema
+        args: ["--schemafile", "support/doc_config_schema.json"]
+        files: "\\.doc_config\\.yaml"
+        types: [yaml]
 
   - repo: "https://github.com/sirosen/texthooks"
     rev: 0.6.8

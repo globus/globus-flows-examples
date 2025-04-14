@@ -68,24 +68,43 @@ def build_all_files() -> t.Iterator[tuple[str, bytes]]:
         config = load_config(config_file)
         all_example_configs.append(config)
 
-        if not config.readme_is_index:
-            _abort("doc builds currently only support readme_is_index behavior")
-
         for sub_path in ("definition.json", "input_schema.json", "sample_input.json"):
             with open(source_dir / sub_path, "rb") as fp:
                 yield f"{config.example_dir}/{sub_path}", fp.read()
-        with open(source_dir / "README.adoc", "rb") as fp:
-            content = fp.read()
-            if config.append_source_blocks:
-                content = append_source_blocks(content)
-            content = prepend_preamble(config, content)
-            yield f"{config.example_dir}/index.adoc", content
+
+        yield f"{config.example_dir}/index.adoc", render_example_index_doc(
+            source_dir, config
+        )
     yield "index.adoc", build_index_doc(all_example_configs)
 
 
 def find_build_configs() -> t.Iterator[pathlib.Path]:
     for item in glob.glob("*/**/.doc_config.yaml", recursive=True):
         yield pathlib.Path(item)
+
+
+def render_example_index_doc(
+    source_dir: pathlib.Path, config: ExampleDocBuildConfig
+) -> bytes:
+    content: bytes
+    if config.index_source.mode == "copy":
+        if len(config.index_source.filenames) != 1:
+            raise ValueError("A 'copy' config cannot have multiple filenames.")
+        content = (source_dir / config.index_source.filenames[0]).read_bytes()
+    elif config.index_source.mode == "concat":
+        content = b"".join(
+            (source_dir / filename).read_bytes()
+            for filename in config.index_source.filenames
+        )
+    else:
+        raise NotImplementedError(
+            f"Unsupported index_source mode: {config.index_source.mode}"
+        )
+
+    if config.append_source_blocks:
+        content = append_source_blocks(content)
+    content = prepend_preamble(config, content)
+    return content
 
 
 def prepend_preamble(config: ExampleDocBuildConfig, content: bytes) -> bytes:
@@ -171,55 +190,51 @@ def build_index_doc(configs: list[ExampleDocBuildConfig]) -> bytes:
     return INDEX_TEMPLATE.render({"examples": sorted_configs}).encode("utf-8")
 
 
+def load_config(config_file: pathlib.Path) -> ExampleDocBuildConfig:
+    with open(config_file, "rb") as fp:
+        raw_config_data = yaml.load(fp, Loader=yaml.Loader)
+
+    if not isinstance(raw_config_data, dict):
+        _abort(f"cannot fetch yaml data from {config_file}, non-dict config?")
+
+    return ExampleDocBuildConfig._load(raw_config_data)
+
+
 @dataclasses.dataclass
 class ExampleDocBuildConfig:
     title: str
     short_description: str
     example_dir: str
-    readme_is_index: bool
+    index_source: IndexSourceConfig
     append_source_blocks: bool
     menu_weight: int
 
+    @classmethod
+    def _load(cls, data: dict[str, t.Any]) -> t.Self:
 
-def load_config(config_file: pathlib.Path) -> ExampleDocBuildConfig:
-    filename: str = str(config_file)
-    with open(config_file, "rb") as fp:
-        raw_config_data = yaml.load(fp, Loader=yaml.Loader)
-
-    title: str = _require_yaml_type(filename, raw_config_data, "title", str)
-    short_description: str = _require_yaml_type(
-        filename, raw_config_data, "short_description", str
-    )
-
-    example_dir: str = _require_yaml_type(filename, raw_config_data, "example_dir", str)
-    readme_is_index: bool = _require_yaml_type(
-        filename, raw_config_data, "readme_is_index", bool
-    )
-    append_source_blocks: bool = _require_yaml_type(
-        filename, raw_config_data, "append_source_blocks", bool
-    )
-    menu_weight: int = _require_yaml_type(filename, raw_config_data, "menu_weight", int)
-
-    return ExampleDocBuildConfig(
-        title=title,
-        short_description=short_description,
-        example_dir=example_dir,
-        readme_is_index=readme_is_index,
-        append_source_blocks=append_source_blocks,
-        menu_weight=menu_weight,
-    )
+        return cls(
+            title=data["title"],
+            short_description=data["short_description"],
+            example_dir=data["example_dir"],
+            index_source=IndexSourceConfig._load(data["index_source"]),
+            append_source_blocks=data["append_source_blocks"],
+            menu_weight=data["menu_weight"],
+        )
 
 
-T = t.TypeVar("T")
+@dataclasses.dataclass
+class IndexSourceConfig:
+    mode: t.Literal["copy", "concat"]
+    filenames: list[str]
 
-
-def _require_yaml_type(filename: str, data: t.Any, key: str, typ: type[T]) -> T:
-    if not isinstance(data, dict):
-        _abort("cannot fetch yaml data, non-dict config?")
-    value = data.get(key)
-    if not isinstance(value, typ):
-        _abort(f"{filename}::$.{key} must be of type '{typ.__name__}'")
-    return value
+    @classmethod
+    def _load(cls, data: dict[str, t.Any]) -> t.Self:
+        if "copy" in data:
+            return cls(mode="copy", filenames=[data["copy"]])
+        elif "concat" in data:
+            return cls(mode="concat", filenames=[data["concat"]["files"]])
+        else:
+            _abort("Unexpected error: index_source did not have copy or concat")
 
 
 def _abort(message: str) -> t.NoReturn:
