@@ -8,7 +8,8 @@ short_description: |
     be copied to the destination and then deleted from the source.
 
 example_dir: 'move_flow'
-readme_is_index: true
+index_source:
+  copy: "README.adoc"
 append_source_blocks: true
 
 menu_weight: 100
