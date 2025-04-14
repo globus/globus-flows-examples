@@ -192,7 +192,7 @@ def build_index_doc(configs: list[ExampleDocBuildConfig]) -> bytes:
 
 def load_config(config_file: pathlib.Path) -> ExampleDocBuildConfig:
     with open(config_file, "rb") as fp:
-        raw_config_data = yaml.load(fp, Loader=yaml.Loader)
+        raw_config_data = yaml.safe_load(fp)
 
     if not isinstance(raw_config_data, dict):
         _abort(f"cannot fetch yaml data from {config_file}, non-dict config?")
