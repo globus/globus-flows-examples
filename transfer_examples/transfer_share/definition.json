@@ -1,0 +1,72 @@
+{
+  "Comment": "Transfer files to a guest collection and set permissions.",
+  "StartAt": "GetDestinationInfo",
+  "States": {
+    "GetDestinationInfo": {
+      "Type": "Action",
+      "ActionUrl": "https://transfer.actions.globus.org/collection_info",
+      "Parameters": {
+        "endpoint_id.$": "$.destination.id"
+      },
+      "ResultPath": "$.DestinationInfo",
+      "Next": "CheckDestinationCollectionType"
+    },
+    "CheckDestinationCollectionType": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Or": [
+            {
+              "Variable": "$.DestinationInfo.details.entity_type",
+              "StringEquals": "GCP_guest_collection"
+            },
+            {
+              "Variable": "$.DestinationInfo.details.entity_type",
+              "StringEquals": "GCSv5_guest_collection"
+            }
+          ],
+          "Next": "TransferFiles"
+        }
+      ],
+      "Default": "FailBadDestinationCollectionType"
+    },
+    "TransferFiles": {
+      "Type": "Action",
+      "ActionUrl": "https://transfer.actions.globus.org/transfer",
+      "Parameters": {
+        "source_endpoint.$": "$.source.id",
+        "destination_endpoint.$": "$.destination.id",
+        "DATA": [
+          {
+            "DATA_TYPE": "transfer_item",
+            "source_path.$": "$.source.path",
+            "destination_path.$": "$.destination.path"
+          }
+        ]
+      },
+      "ResultPath": "$.TransferFiles",
+      "Next": "SetPermission"
+    },
+    "SetPermission": {
+      "Comment": "Grant read permission on the data to a Globus user or group",
+      "Type": "Action",
+      "ActionUrl": "https://transfer.actions.globus.org/manage_permission",
+      "Parameters": {
+        "endpoint_id.$": "$.destination.id",
+        "path.$": "$.destination.path",
+        "operation": "CREATE",
+        "permissions": "r",
+        "principal_type.$": "$.principal.type",
+        "principal.$": "$.principal.id"
+      },
+      "ResultPath": "$.SetPermission",
+      "End": true
+    },
+    "FailBadDestinationCollectionType": {
+      "Comment": "Fail due to an incorrect destination collection type.",
+      "Type": "Fail",
+      "Cause": "NonGuestDestinationCollection",
+      "Error": "The destination collection is not a guest collection, which is a requirement for this flow."
+    }
+  }
+}

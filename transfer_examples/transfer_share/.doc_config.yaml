@@ -1,0 +1,12 @@
+# configuration for conversion to docs.globus.org
+title: 'Transfer and Share Files'
+short_description: |
+    Copy data to a Guest Collection and create a new read-only permission to
+    allow a user or group to read the data from that location.
+
+example_dir: 'transfer_share'
+index_source:
+  copy: "README.adoc"
+append_source_blocks: true
+
+menu_weight: 150

@@ -1,0 +1,19 @@
+= Transfer and Share Files
+
+== Description
+
+Move and share files by transferring them to a Guest Collection.
+
+The source directory or file will be copied, and then a new permission will be
+created on the destination to give read-only access to a user or group.
+
+== Highlights
+
+This **flow** verifies that the destination is a Guest Collection before starting the data transfer.
+This ensures that it will be possible to create a permission on the destination later in the **flow**.
+In `GetDestinationInfo`, the **flow** collects metadata about the collection, and in `CheckDestinationCollectionType`, it dispatches over that information.
+The **flow** jumps to a `Fail` state, `FailBadDestinationCollectionType`, if the check does not pass.
+
+The input schema in this example also demonstrates how to accept **collection** and **principal** types.
+The `"format": "globus-collection"` annotation ensures that `source` and `destination` are treated as **collection**s when using guided **flow** input in the web interface.
+`"format": "globus-principal"` does the same for users and groups.
