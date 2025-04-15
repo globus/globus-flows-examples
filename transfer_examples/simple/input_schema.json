@@ -1,0 +1,50 @@
+{
+  "type": "object",
+  "propertyOrder": [
+    "source",
+    "destination"
+  ],
+  "required": [
+    "source",
+    "destination"
+  ],
+  "properties": {
+    "source": {
+      "type": "object",
+      "format": "globus-collection",
+      "required": [
+        "id",
+        "path"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "path": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "destination": {
+      "type": "object",
+      "format": "globus-collection",
+      "required": [
+        "id",
+        "path"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "path": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

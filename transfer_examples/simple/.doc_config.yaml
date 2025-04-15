@@ -1,0 +1,11 @@
+# configuration for conversion to docs.globus.org
+title: 'Simple Transfer'
+short_description: |
+    Perform a file or directory transfer with a time limit.
+
+example_dir: 'simple_transfer'
+index_source:
+  copy: "README.adoc"
+append_source_blocks: true
+
+menu_weight: 50

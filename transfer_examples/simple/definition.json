@@ -1,0 +1,21 @@
+{
+  "StartAt": "Transfer",
+  "States": {
+    "Transfer": {
+      "Type": "Action",
+      "ActionUrl": "https://transfer.actions.globus.org/transfer",
+      "WaitTime": 900,
+      "Parameters": {
+        "DATA": [
+          {
+            "source_path.$": "$.source.path",
+            "destination_path.$": "$.destination.path"
+          }
+        ],
+        "source_endpoint.$": "$.source.id",
+        "destination_endpoint.$": "$.destination.id"
+      },
+      "End": true
+    }
+  }
+}
