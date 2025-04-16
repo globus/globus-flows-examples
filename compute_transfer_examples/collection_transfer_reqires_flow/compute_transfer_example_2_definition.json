@@ -1,0 +1,137 @@
+{
+  "StartAt": "SetConstants",
+  "States": {
+    "SetConstants": {
+      "Type": "ExpressionEval",
+      "Parameters": {
+        "gcs_base_path": "/",
+        "compute_endpoint_id": "<INSERT YOUR COMPUTE ENDPOINT ID HERE>",
+        "compute_function_id": "<INSERT YOUR COMPUTE FUNCTION ID HERE>",
+        "compute_output_directory.=": "'/' + _context.run_id + '/'"
+      },
+      "ResultPath": "$.constants",
+      "Next": "InitIterateSourcePaths"
+    },
+    "InitIterateSourcePaths": {
+      "Type": "ExpressionEval",
+      "Parameters": {
+        "src_paths_iterator_pos": 0,
+        "src_paths": [],
+        "transfer_from_src_data": []
+      },
+      "ResultPath": "$.iterate_source_paths",
+      "Next": "IterateSourcePathsConditional"
+    },
+    "IterateSourcePathsConditional": {
+      "Type": "ExpressionEval",
+      "Parameters": {
+        "conditional.=": "len(transfer_settings.DATA) > iterate_source_paths.src_paths_iterator_pos"
+      },
+      "ResultPath": "$.iterate_source_paths_conditional",
+      "Next": "IterateSourcePaths"
+    },
+    "IterateSourcePaths": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.iterate_source_paths_conditional.conditional",
+          "BooleanEquals": true,
+          "Next": "StatSourcePath"
+        }
+      ],
+      "Default": "MakeComputeWorkingDir"
+    },
+    "StatSourcePath": {
+      "Type": "Action",
+      "ActionUrl": "https://transfer.actions.globus.org/stat",
+      "Parameters": {
+        "endpoint_id.$": "$.transfer_settings.source_endpoint",
+        "path.=": "transfer_settings.DATA[iterate_source_paths.src_paths_iterator_pos].source_path"
+      },
+      "ResultPath": "$.source_path_stat_result",
+      "Next": "AppendSourcePath"
+    },
+    "AppendSourcePath": {
+      "Type": "ExpressionEval",
+      "Parameters": {
+        "src_paths.=": "iterate_source_paths.src_paths + [constants.compute_output_directory + source_path_stat_result.details.name]",
+        "transfer_from_src_data.=": "iterate_source_paths.transfer_from_src_data + [{'source_path': transfer_settings.DATA[iterate_source_paths.src_paths_iterator_pos].source_path, 'destination_path': constants.compute_output_directory + source_path_stat_result.details.name, 'DATA_TYPE': transfer_settings.DATA[iterate_source_paths.src_paths_iterator_pos].DATA_TYPE, 'recursive': transfer_settings.DATA[iterate_source_paths.src_paths_iterator_pos].recursive}]",
+        "src_paths_iterator_pos.=": "iterate_source_paths.src_paths_iterator_pos + 1"
+      },
+      "ResultPath": "$.iterate_source_paths",
+      "Next": "IterateSourcePathsConditional"
+    },
+    "MakeComputeWorkingDir": {
+      "Type": "Action",
+      "ActionUrl": "https://transfer.actions.globus.org/mkdir",
+      "Parameters": {
+        "endpoint_id.$": "$.transfer_settings.destination_endpoint",
+        "path.$": "$.constants.compute_output_directory"
+      },
+      "ResultPath": "$.mkdir_result",
+      "Next": "TransferToComputeEndpoint"
+    },
+    "TransferToComputeEndpoint": {
+      "Type": "Action",
+      "ActionUrl": "https://transfer.actions.globus.org/transfer",
+      "Parameters": {
+        "source_endpoint.$": "$.transfer_settings.source_endpoint",
+        "destination_endpoint.$": "$.transfer_settings.destination_endpoint",
+        "DATA.$": "$.iterate_source_paths.transfer_from_src_data"
+      },
+      "ResultPath": "$.transfer_from_src_result",
+      "Next": "RunComputeFunction"
+    },
+    "RunComputeFunction": {
+      "Type": "Action",
+      "ActionUrl": "https://compute.actions.globus.org/v3",
+      "Parameters": {
+        "endpoint_id.$": "$.constants.compute_endpoint_id",
+        "tasks": [
+          {
+            "function_id.$": "$.constants.compute_function_id",
+            "args": [],
+            "kwargs": {
+              "src_paths.$": "$.iterate_source_paths.src_paths",
+              "dest_path.$": "$.constants.compute_output_directory",
+              "gcs_base_path.$": "$.constants.gcs_base_path"
+            }
+          }
+        ]
+      },
+      "ResultPath": "$.compute_result",
+      "Next": "TransferFromComputeEndpoint"
+    },
+    "TransferFromComputeEndpoint": {
+      "Type": "Action",
+      "ActionUrl": "https://transfer.actions.globus.org/transfer",
+      "Parameters": {
+        "source_endpoint.$": "$.transfer_settings.destination_endpoint",
+        "destination_endpoint.$": "$.destination.id",
+        "DATA": [
+          {
+            "source_path.=": "compute_result.details.result[0]",
+            "destination_path.$": "$.destination.path"
+          }
+        ]
+      },
+      "ResultPath": "$.transfer_to_dest_result",
+      "Next": "CleanupComputeEndpoint"
+    },
+    "CleanupComputeEndpoint": {
+      "Type": "Action",
+      "ActionUrl": "https://transfer.actions.globus.org/delete",
+      "Parameters": {
+        "endpoint.$": "$.transfer_settings.destination_endpoint",
+        "recursive": true,
+        "DATA": [
+          {
+            "path.$": "$.constants.compute_output_directory"
+          }
+        ]
+      },
+      "ResultPath": "$.delete_compute_output_result",
+      "End": true
+    }
+  }
+}
