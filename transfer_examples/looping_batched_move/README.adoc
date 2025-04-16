@@ -1,0 +1,30 @@
+= Looping Batched Move
+
+[TIP]
+=====
+This example is a demonstration of looping in a **flow**.
+For most use cases, moving a directory in a single transfer **task** is a more appropriate solution.
+=====
+
+This example demonstrates while-loop-style looping in a **flow**.
+It moves files from a source to a destination until the source is empty.
+
+The contents of the given source path are transferred in batches of 100 items and are deleted from the source path as the transfers succeed.
+
+[NOTE]
+======
+The sample **flow** does not validate the results of the transfer and delete **tasks**.
+
+Even if a transfer **task** fails, the **flow** will attempt to delete the batch of items.
+This could lead to data loss.
+
+Even if a delete **task** fails, the **flow** will continue to loop if there are still items to transfer in the source path. This could lead to an infinite loop.
+======
+
+== Highlights
+
+The **flow** starts with an `ls` operation on the source in the `List` **state**, and then uses a `Choice` **state**, `CheckIfDone`, to inspect the results.
+`Choice` **states** allow **flow**s to dispatch and make loops possible.
+
+Although the **flow** has some known failure modes, it can rely on the guarantee that when the `Transfer` **state** is done executing, the data transfer will be complete.
+That makes it relatively safe to delete data in the `Delete` **state**.

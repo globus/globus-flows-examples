@@ -1,0 +1,12 @@
+# configuration for conversion to docs.globus.org
+title: 'Looping Batched Move'
+short_description: |
+    Use transfer and deletion to 'move' files from a source to a destination, in batches of 100 files.
+    Repeat this process until the source directory is empty.
+
+example_dir: 'looping_batched_move'
+index_source:
+  copy: "README.adoc"
+append_source_blocks: true
+
+menu_weight: 350
