@@ -1,0 +1,115 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source",
+    "destination",
+    "principal"
+  ],
+  "propertyOrder": [
+    "source",
+    "destination",
+    "principal"
+  ],
+  "properties": {
+    "source": {
+      "title": "Source",
+      "type": "object",
+      "format": "globus-collection",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "path"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "path": {
+          "type": "string"
+        }
+      }
+    },
+    "destination": {
+      "title": "Destination",
+      "type": "object",
+      "format": "globus-collection",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "path"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "path": {
+          "type": "string"
+        }
+      }
+    },
+    "principal": {
+      "type": "object",
+      "format": "globus-principal",
+      "title": "User or Group",
+      "oneOf": [
+        {
+          "$ref": "#/definitions/identity-principal"
+        },
+        {
+          "$ref": "#/definitions/group-principal"
+        }
+      ]
+    }
+  },
+  "definitions": {
+    "group-principal": {
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "group"
+          ]
+        },
+        "urn": {
+          "type": "string",
+          "pattern": "^urn:globus:groups:id:[0-9a-fA-F-]{36}$"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "identity-principal": {
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "identity"
+          ]
+        },
+        "urn": {
+          "type": "string",
+          "pattern": "^urn:globus:auth:identity:[0-9a-fA-F-]{36}$"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

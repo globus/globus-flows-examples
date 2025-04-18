@@ -1,0 +1,15 @@
+{
+  "source": {
+    "id": "6c54cade-bde5-45c1-bdea-f4bd71dba2cc",
+    "path": "/~/source-directory"
+  },
+  "destination": {
+    "id": "31ce9ba0-176d-45a5-add3-f37d233ba47d",
+    "path": "/~/destination-directory"
+  },
+  "principal": {
+    "id": "46bd0f56-e24f-11e5-a510-131bef46955c",
+    "type": "identity",
+    "urn": "urn:globus:auth:identity:46bd0f56-e24f-11e5-a510-131bef46955c"
+  }
+}
