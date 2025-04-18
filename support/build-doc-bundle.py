@@ -68,7 +68,7 @@ def build_all_files() -> t.Iterator[tuple[str, bytes]]:
         config = load_config(config_file)
         all_example_configs.append(config)
 
-        for sub_path in ("definition.json", "input_schema.json", "sample_input.json"):
+        for sub_path in config.include_files:
             with open(source_dir / sub_path, "rb") as fp:
                 yield f"{config.example_dir}/{sub_path}", fp.read()
 
@@ -208,6 +208,7 @@ class ExampleDocBuildConfig:
     index_source: IndexSourceConfig
     append_source_blocks: bool
     menu_weight: int
+    include_files: list[str]
 
     @classmethod
     def _load(cls, data: dict[str, t.Any]) -> t.Self:
@@ -219,6 +220,11 @@ class ExampleDocBuildConfig:
             index_source=IndexSourceConfig._load(data["index_source"]),
             append_source_blocks=data["append_source_blocks"],
             menu_weight=data["menu_weight"],
+            # fill the default files to include if not present
+            include_files=data.get(
+                "include_files",
+                ["definition.json", "input_schema.json", "sample_input.json"],
+            ),
         )
 
 
@@ -232,7 +238,7 @@ class IndexSourceConfig:
         if "copy" in data:
             return cls(mode="copy", filenames=[data["copy"]])
         elif "concat" in data:
-            return cls(mode="concat", filenames=[data["concat"]["files"]])
+            return cls(mode="concat", filenames=data["concat"]["files"])
         else:
             _abort("Unexpected error: index_source did not have copy or concat")
 

@@ -1,0 +1,76 @@
+== Register the `do_tar` Compute **Function**
+
+For users executing these examples, the next step is to register the `do_tar` Compute **function**.
+This is the Compute **function** which the example flows will invoke to create archives.
+
+You can run the provided python script from the environment with `globus-compute-sdk` installed:
+
+[source,bash]
+----
+python ./register_compute_function.py
+----
+
+and save the Compute **function**'s UUID.
+
+[IMPORTANT]
+===========
+Make sure to note the **function**'s UUID, it will be needed later!
+===========
+
+ifndef::env-github[]
+[.accordionize]
+--
+.register_compute_function.py
+[%collapsible]
+====
+[source,python,role=clippable-code]
+----
+include::register_compute_function.py[]
+----
+====
+--
+endif::[]
+
+[TIP]
+=====
+For the best results, use the same Python version for registration as the one running on your Globus Compute Endpoint.
+
+This ensures that you always get the most consistent behavior between the two environments.
+=====
+
+=== `do_tar` Behaviors
+
+`do_tar` is a **function** which compiles multiple files into a `tar` archive.
+It accepts source paths (multiple files) and a destination where the new `tar` file should be created.
+It also is aware that it is meant to operate in the same location as a Globus Connect Server **collection**.
+
+[cols="1,1",options="header",caption="`do_tar` Parameters"]
+|===
+| Parameter | Description
+
+| `src_paths` | List of paths to the files/directories to be archived.
+| `dest_path` | Where to write the tar archive (directory or file path).
+| `gcs_base_path` | The co-located Globus Connect Server **collection**'s configured base path. (default: `"/"`).
+|===
+
+==== **Collection** Base Paths
+
+The `gcs_base_path` parameter is provided to the Compute **function** to allow it to transform the user input paths to absolute paths.
+If
+link:https://docs.globus.org/globus-connect-server/v5/data-access-guide/#configure_collection_base_path[the **collection** has a configured `base_path`],
+this option is needed in order to handle the path rewrites this entails.
+
+For example,
+
+- The **collection** has configured its base path to `/path/to/root/`.
+- A user wants to tar the files at the absolute path `/path/to/root/input_files/`.
+- This path therefore appears as `/input_files/` on the **collection**.
+- The `do_tar` **function** will access the same storage filesystem, and will need to know that `/input_files/` maps to `/path/to/root/input_files/`.
+
+In this scenario, `gcs_base_path` would be set to `/path/to/root/`, allowing the **function** to match the behavior of the **collection** on the same filesystem.
+
+ifdef::env-github[]
+== Next: Example Flow 1, with Data on the Server
+
+link:./example_flow1.adoc[Example Flow 1.]
+endif::[]

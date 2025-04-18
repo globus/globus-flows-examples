@@ -1,0 +1,102 @@
+== Example Flow 1
+
+In this first example, the Compute and Transfer **flow** takes a user-provided list of files that already exist in a preconfigured source **collection**.
+
+The **flow** creates a tarfile from those files and transfers the tarfile to a user-provided destination collection.
+
+The **flow** will:
+
+1. Set constants for the **run**
+2. Create an output directory named after the **run**'s ID on the source collection
+3. Invoke the `do_tar` **function** to create a tar archive from the input source files and save it in the output directory
+4. Transfer the resulting tarfile to the destination collection provided in the **flow** input
+5. Delete the output directory on the source collection
+
+=== Create the **Flow**
+
+1. Edit `compute_transfer_example_1_definition.json` and replace the placeholder values:
+
+   - `gcs_endpoint_id`: The source **collection** ID
+   - `compute_endpoint_id`: The Compute **endpoint** ID
+   - `compute_function_id`: The UUID of the registered `do_tar` **function**
+
+If the **collection** has a configured base path, also edit `gcs_base_path`.
+
+2. Create the **flow**:
++
+[source,bash,role=clippable-code]
+----
+globus flows create "Compute and Transfer Flow Example 1" \
+   ./compute_transfer_example_1_definition.json \
+   --input-schema ./compute_transfer_example_1_schema.json
+----
+
+3. Save the **flow** ID returned by this command
+
+ifndef::env-github[]
+[.accordionize]
+--
+.compute_transfer_example_1_definition.json
+[%collapsible]
+====
+[source,json,role=clippable-code]
+----
+include::compute_transfer_example_1_definition.json[]
+----
+====
+.compute_transfer_example_1_schema.json
+[%collapsible]
+====
+[source,json,role=clippable-code]
+----
+include::compute_transfer_example_1_schema.json[]
+----
+====
+--
+endif::[]
+
+=== Run the **Flow**
+
+1. Create the **flow** input JSON file:
++
+[source,json,role=clippable-code]
+----
+{
+    "source_paths": ["/path/to/file1", "/path/to/file2"],
+    "destination_path": "/path/to/your/destination/file.tar.gz",
+    "destination_endpoint_id": "your-destination-endpoint-uuid"
+}
+----
+
+2. Start the **flow**:
++
+[source,bash,role=clippable-code]
+----
+globus flows start "$FLOW_ID" \
+   --input "<FLOW INPUT FILE>" \
+   --label "Compute and Transfer Flow Example 1 Run"
+----
++
+And save the **run** ID for use in the next command.
+
+3. Monitor the **run** progress:
++
+[source,bash,role=clippable-code]
+----
+globus flows run show "<RUN_ID>"
+----
+** At this point, the **run** _may_ become `INACTIVE`, depending on the type of **collection** being used.
+** For inactive **run**s due to data access requirements, this can be resolved by resuming the **run** and following the prompts:
++
+[source,bash,role=clippable-code]
+----
+globus flows run resume "<RUN_ID>"
+----
++
+When prompted, run `globus session consent` and rerun `globus flows run resume` to resume the **run**.
+
+ifdef::env-github[]
+== Next: Example Flow 2, with Data on a Separate **Collection**
+
+link:./example_flow2.adoc[Example Flow 2.]
+endif::[]

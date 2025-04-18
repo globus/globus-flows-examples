@@ -3,6 +3,9 @@
   "description": "This schema describes the shape of our internal doc configs. It is used to validate configs so that the build script doesn't need to do this checking.",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "properties": {
+    "include_files": {
+      "$ref": "#/$defs/string_array"
+    },
     "title": {
       "type": "string"
     },
