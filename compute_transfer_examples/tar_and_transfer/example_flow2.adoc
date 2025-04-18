@@ -26,7 +26,7 @@ An alternative approach, with fewer states, would be to create a separate Comput
 
 1. Edit `compute_transfer_example_2_definition.json` and replace the placeholder values:
 
-   - `gcs_endpoint_id`: The **collection** ID
+   - `gcs_endpoint_id`: The intermediate **collection** ID
    - `compute_endpoint_id`: The Compute **endpoint** ID
    - `compute_function_id`: The UUID of the registered `do_tar` **function**
 

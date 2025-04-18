@@ -1,22 +1,22 @@
 == Example Flow 1
 
-In this first example, the Compute and Transfer **flow** takes a user-provided list of source files that already exist in the **collection**.
+In this first example, the Compute and Transfer **flow** takes a user-provided list of files that already exist in a preconfigured source **collection**.
 
 The **flow** creates a tarfile from those files and transfers the tarfile to a user-provided destination collection.
 
 The **flow** will:
 
 1. Set constants for the **run**
-2. Create an output directory named after the **run**'s ID on the GCS collection
+2. Create an output directory named after the **run**'s ID on the source collection
 3. Invoke the `do_tar` **function** to create a tar archive from the input source files and save it in the output directory
 4. Transfer the resulting tarfile to the destination collection provided in the **flow** input
-5. Delete the output directory
+5. Delete the output directory on the source collection
 
 === Create the **Flow**
 
 1. Edit `compute_transfer_example_1_definition.json` and replace the placeholder values:
 
-   - `gcs_endpoint_id`: The **collection** ID
+   - `gcs_endpoint_id`: The source **collection** ID
    - `compute_endpoint_id`: The Compute **endpoint** ID
    - `compute_function_id`: The UUID of the registered `do_tar` **function**
 
