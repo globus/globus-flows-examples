@@ -15,5 +15,5 @@ In `GetDestinationInfo`, the **flow** collects metadata about the collection, an
 The **flow** jumps to a `Fail` state, `FailBadDestinationCollectionType`, if the check does not pass.
 
 The input schema in this example also demonstrates how to accept **collection** and **principal** types.
-The `"format": "globus-collection"` annotation ensures that `source` and `destination` are treated as **collection**s when using guided **flow** input in the web interface.
+The `"format": "globus-collection"` annotation ensures that `source` and `destination` are treated as **collection**s when using guided **flow** input in the Globus Web App.
 `"format": "globus-principal"` does the same for users and groups.
