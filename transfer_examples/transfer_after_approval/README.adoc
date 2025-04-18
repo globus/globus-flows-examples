@@ -23,7 +23,8 @@ This flow has several technical highlights.
 
 *   `__Private_Parameters` and `_private` parameter prefixes are used throughout.
 This helps restrict visibility of private information (such as email addresses and SMTP credentials)
-when users view the **flow definition** as well as while the **flow runs**.
+when users view the **flow** definition as well as while their **runs** of the
+**flow** are executing.
 +
 For more information, see link:https://docs.globus.org/api/flows/authoring-flows/secrets/[Protecting Secrets]
 in the Authoring Flows documentation.
@@ -36,7 +37,7 @@ without having to give individual users write permission on the destination **co
 
 == Prerequisites
 
-The **flow definition** must be modified before using it to create a new **flow**.
+The **flow** definition must be modified before using it to create a new **flow**.
 It also has several requirements when running.
 
 === Modification requirements
@@ -58,7 +59,7 @@ and the `destination_path` should match the target directory you want approved f
 
 === Execution requirements
 
-*   After modifying the **flow definition** and creating the flow in the Globus Flows service,
+*   After modifying the **flow** definition and creating the **flow** in the Globus Flows service,
 a destination collection administrator must give the flow client write permission on the collection.
 +
 This can be accomplished in the Web App, in the destination **collection**'s Permissions tab,
