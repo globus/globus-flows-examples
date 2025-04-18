@@ -7,4 +7,4 @@ Do a single file or directory transfer with a 15 minute time limit.
 == Highlights
 
 In the **flow definition**, the `WaitTime` parameter is set to `900`.
-If 900 seconds (15 minutes) passes without the transfer completing, the **flow** will fail.
+If 900 seconds (15 minutes) passes without the transfer completing, the **run** will fail.
