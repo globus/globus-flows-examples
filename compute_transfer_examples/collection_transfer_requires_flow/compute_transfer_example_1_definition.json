@@ -1,0 +1,93 @@
+{
+  "StartAt": "SetConstants",
+  "States": {
+    "SetConstants": {
+      "Type": "ExpressionEval",
+      "Parameters": {
+        "gcs_base_path": "/",
+        "compute_endpoint_id": "<INSERT YOUR COMPUTE ENDPOINT ID HERE>",
+        "compute_function_id": "<INSERT YOUR COMPUTE FUNCTION ID HERE>",
+        "compute_output_directory.=": "'/' + _context.run_id + '/'"
+      },
+      "ResultPath": "$.constants",
+      "Next": "CollectSourcePaths"
+    },
+    "CollectSourcePaths": {
+      "Type": "ExpressionEval",
+      "Parameters": {
+        "paths.=": "[item.source_path for item in transfer_settings.DATA]"
+      },
+      "ResultPath": "$.src",
+      "Next": "MakeComputeWorkingDir"
+    },
+    "MakeComputeWorkingDir": {
+      "Type": "Action",
+      "ActionUrl": "https://transfer.actions.globus.org/mkdir",
+      "Parameters": {
+        "endpoint_id.$": "$.transfer_settings.source_endpoint",
+        "path.$": "$.constants.compute_output_directory"
+      },
+      "ResultPath": "$.mkdir_result",
+      "Next": "RunComputeFunction"
+    },
+    "RunComputeFunction": {
+      "Type": "Action",
+      "ActionUrl": "https://compute.actions.globus.org/v3",
+      "Parameters": {
+        "endpoint_id.$": "$.constants.compute_endpoint_id",
+        "tasks": [
+          {
+            "function_id.$": "$.constants.compute_function_id",
+            "args": [],
+            "kwargs": {
+              "src_paths.$": "$.src.paths",
+              "dest_path.$": "$.constants.compute_output_directory",
+              "gcs_base_path.$": "$.constants.gcs_base_path"
+            }
+          }
+        ]
+      },
+      "ResultPath": "$.compute_result",
+      "Next": "GetDestinationPath"
+    },
+    "GetDestinationPath": {
+      "Type": "ExpressionEval",
+      "Parameters": {
+        "path.=": "getattr('destination_path', '/~/' + pathsplit(compute_result.details.result[0])[1])"
+      },
+      "ResultPath": "$.destination",
+      "Next": "TransferFromComputeEndpoint"
+    },
+    "TransferFromComputeEndpoint": {
+      "Type": "Action",
+      "ActionUrl": "https://transfer.actions.globus.org/transfer",
+      "Parameters": {
+        "source_endpoint.$": "$.transfer_settings.source_endpoint",
+        "destination_endpoint.$": "$.transfer_settings.destination_endpoint",
+        "DATA": [
+          {
+            "source_path.=": "compute_result.details.result[0]",
+            "destination_path.$": "$.destination.path"
+          }
+        ]
+      },
+      "ResultPath": "$.transfer_to_dest_result",
+      "Next": "CleanupComputeEndpoint"
+    },
+    "CleanupComputeEndpoint": {
+      "Type": "Action",
+      "ActionUrl": "https://transfer.actions.globus.org/delete",
+      "Parameters": {
+        "endpoint.$": "$.transfer_settings.source_endpoint",
+        "recursive": true,
+        "DATA": [
+          {
+            "path.$": "$.constants.compute_output_directory"
+          }
+        ]
+      },
+      "ResultPath": "$.delete_compute_output_result",
+      "End": true
+    }
+  }
+}

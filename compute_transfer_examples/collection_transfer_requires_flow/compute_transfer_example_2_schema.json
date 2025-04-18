@@ -1,0 +1,18 @@
+{
+  "type": "object",
+  "required": [
+    "transfer_settings"
+  ],
+  "properties": {
+    "transfer_settings": {
+      "type": "object",
+      "format": "globus-transfer-transfer#0.10"
+    },
+    "destination_path": {
+      "type": "string",
+      "title": "Destination Collection Path",
+      "description": "The path on the destination collection for the tarball file"
+    }
+  },
+  "additionalProperties": false
+}
