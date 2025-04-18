@@ -9,13 +9,13 @@ Remove from intermediate after completion.
 ====
 This example differs from the
 link:https://app.globus.org/flows/99791f7d-6c2c-4675-af4b-b927db68bad0/definition[Two Stage Globus Transfer^]
-Globus-provided Flow available in the Globus Web App.
+Globus-provided **flow** available in the Globus Web App.
 
 The example below is simplified and may exhibit slightly different behaviors.
 ====
 
 == Highlights
 
-The `ComputeTaskData` state uses the run ID to create a unique temporary directory on the intermediary endpoint.
+The `ComputeTaskData` **state** uses the **run** ID to create a unique temporary directory on the intermediate **collection**.
 
-This helps ensure that existing data on the intermediary endpoint are not overwritten by accident.
+This helps ensure that existing data on the intermediate **collection** are not overwritten by accident.
