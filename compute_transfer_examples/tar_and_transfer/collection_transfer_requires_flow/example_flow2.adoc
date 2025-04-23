@@ -1,8 +1,10 @@
 == Example Flow 2
 
-In this second example, the **flow** takes a user-provided list of source files that exist on a user-provided source **collection**, distinct from the **collection** which is colocated with the Compute **endpoint**.
+In this second example, the **flow** takes a `globus-transfer-transfer#0.10` object specifying a list of source files that exist on a user-provided source **collection**, distinct from the **collection** which is colocated with the Compute **endpoint**.
 
-The **flow** transfers the files to the **collection** which is colocated with the Compute **endpoint**, creates a tarfile from them, and transfers the tarfile to a user-provided destination **collection**. This **flow** will fail if any source paths are the path '/' or contain the character '~'.
+The **flow** transfers the files to the **collection** which is colocated with the Compute **endpoint**, creates a tarfile from them, and transfers the tarfile to a user-provided destination **collection**. This flow behaves the same as its counterpart, the only difference being in that the source files to be tarballed and the desitnation collection are derived from the transfer data rather than the user input. This **flow** will fail if any source paths are the path '/' or contain the character '~'.
+
+The **flow** is intended to be invoked from the Globus webapp when initating a transfer where the **destination** collection has this flow set as the destination in its `associated_flow_policy`.
 
 The **flow** will:
 
@@ -14,6 +16,7 @@ The **flow** will:
 6. Invoke the `do_tar` **function** to create a tar archive from the source files and save it in the output directory
 7. Transfer the resulting tarfile to the destination **collection** provided in the **flow** input
 8. Delete the output directory on the intermediate **collection**
+
 
 === Create the **Flow**
 
@@ -73,10 +76,7 @@ endif::[]
 [source,json,role=clippable-code]
 ----
 {
-    "source_endpoint": "your-source-endpoint-uuid",
-    "source_paths": ["/path/to/file1", "/path/to/file2"],
     "destination_path": "/path/to/your/destination/file.tar.gz",
-    "destination_endpoint_id": "your-destination-endpoint-uuid"
 }
 ----
 

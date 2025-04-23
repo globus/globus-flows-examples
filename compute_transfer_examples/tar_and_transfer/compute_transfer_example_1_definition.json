@@ -1,24 +1,42 @@
 {
-  "StartAt": "SetConstants",
+  "StartAt": "SetRunVariables",
   "States": {
-    "SetConstants": {
+    "SetRunVariables": {
       "Type": "ExpressionEval",
       "Parameters": {
         "gcs_endpoint_id": "<INSERT YOUR GCS ENDPOINT ID HERE>",
         "gcs_base_path": "/",
         "compute_endpoint_id": "<INSERT YOUR COMPUTE ENDPOINT ID HERE>",
         "compute_function_id": "<INSERT YOUR COMPUTE FUNCTION ID HERE>",
-        "compute_output_directory.=": "'/' + _context.run_id + '/'"
+        "compute_output_directory.=": "'/' + _context.run_id + '/'",
+        "input_data_valid.=": "['~' in source_path or source_path == '/' for source_path in source_paths] == [False] * len(source_paths)"
       },
-      "ResultPath": "$.constants",
-      "Next": "MakeComputeWorkingDir"
+      "ResultPath": "$.run_vars",
+      "Next": "ValidateInputData"
+    },
+    "ValidateInputData": {
+      "Comment": "Validate that none of the input source paths are the path '/' or contain the character '~'.",
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.run_vars.input_data_valid",
+          "BooleanEquals": false,
+          "Next": "InvalidInputData"
+        }
+      ],
+      "Default": "MakeComputeWorkingDir"
+    },
+    "InvalidInputData": {
+      "Type": "Fail",
+      "Error": "InvalidInputData",
+      "Cause": "Invalid source path found in the flow input data."
     },
     "MakeComputeWorkingDir": {
       "Type": "Action",
       "ActionUrl": "https://transfer.actions.globus.org/mkdir",
       "Parameters": {
-        "endpoint_id.$": "$.constants.gcs_endpoint_id",
-        "path.$": "$.constants.compute_output_directory"
+        "endpoint_id.$": "$.run_vars.gcs_endpoint_id",
+        "path.$": "$.run_vars.compute_output_directory"
       },
       "ResultPath": "$.mkdir_result",
       "Next": "RunComputeFunction"
@@ -27,51 +45,60 @@
       "Type": "Action",
       "ActionUrl": "https://compute.actions.globus.org/v3",
       "Parameters": {
-        "endpoint_id.$": "$.constants.compute_endpoint_id",
+        "endpoint_id.$": "$.run_vars.compute_endpoint_id",
         "tasks": [
           {
-            "function_id.$": "$.constants.compute_function_id",
+            "function_id.$": "$.run_vars.compute_function_id",
             "args": [],
             "kwargs": {
               "src_paths.$": "$.source_paths",
-              "dest_path.$": "$.constants.compute_output_directory",
-              "gcs_base_path.$": "$.constants.gcs_base_path"
+              "dest_path.$": "$.run_vars.compute_output_directory",
+              "gcs_base_path.$": "$.run_vars.gcs_base_path"
             }
           }
         ]
       },
-      "ResultPath": "$.compute_result",
+      "ResultPath": "$.compute_func_result",
+      "Next": "GetDestinationPath"
+    },
+    "GetDestinationPath": {
+      "Comment": "To get the dest path, check if the variable 'destination_path' exists and if not, default to the filename returned by the compute function.",
+      "Type": "ExpressionEval",
+      "Parameters": {
+        "path.=": "getattr('destination_path', '/~/' + pathsplit(compute_func_result.details.result[0])[1])"
+      },
+      "ResultPath": "$.destination",
       "Next": "TransferFromComputeEndpoint"
     },
     "TransferFromComputeEndpoint": {
       "Type": "Action",
       "ActionUrl": "https://transfer.actions.globus.org/transfer",
       "Parameters": {
-        "source_endpoint.$": "$.constants.gcs_endpoint_id",
+        "source_endpoint.$": "$.run_vars.gcs_endpoint_id",
         "destination_endpoint.$": "$.destination_endpoint_id",
         "DATA": [
           {
-            "source_path.=": "compute_result.details.result[0]",
-            "destination_path.$": "$.destination_path"
+            "source_path.=": "compute_func_result.details.result[0]",
+            "destination_path.$": "$.destination.path"
           }
         ]
       },
-      "ResultPath": "$.transfer_to_dest_result",
+      "ResultPath": "$.transfer_result",
       "Next": "CleanupComputeEndpoint"
     },
     "CleanupComputeEndpoint": {
       "Type": "Action",
       "ActionUrl": "https://transfer.actions.globus.org/delete",
       "Parameters": {
-        "endpoint.$": "$.constants.gcs_endpoint_id",
+        "endpoint.$": "$.run_vars.gcs_endpoint_id",
         "recursive": true,
         "DATA": [
           {
-            "path.$": "$.constants.compute_output_directory"
+            "path.$": "$.run_vars.compute_output_directory"
           }
         ]
       },
-      "ResultPath": "$.delete_compute_output_result",
+      "ResultPath": "$.delete_result",
       "End": true
     }
   }

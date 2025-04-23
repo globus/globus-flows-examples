@@ -3,7 +3,7 @@
   "required": [
     "source_endpoint",
     "source_paths",
-    "destination"
+    "destination_endpoint_id"
   ],
   "properties": {
     "source_endpoint": {
@@ -16,29 +16,15 @@
       "title": "Source Collection Paths",
       "description": "A list of paths on the source collection for the data"
     },
-    "destination": {
-      "type": "object",
-      "title": "Destination",
-      "format": "globus-collection",
-      "required": [
-        "id",
-        "path"
-      ],
-      "properties": {
-        "id": {
-          "type": "string",
-          "title": "Destination Collection ID",
-          "format": "uuid",
-          "description": "The endpoint id of the destination collection"
-        },
-        "path": {
-          "type": "string",
-          "title": "Destination Collection Path",
-          "description": "The path on the destination collection to transfer the compute output"
-        }
-      },
-      "description": "The destination for the data",
-      "additionalProperties": false
+    "destination_path": {
+      "type": "string",
+      "title": "Destination Collection Path",
+      "description": "The path on the destination collection for the data."
+    },
+    "destination_endpoint_id": {
+      "type": "string",
+      "title": "Destination Collection Endpoint ID",
+      "description": "The endpoint id of destination collection"
     }
   },
   "additionalProperties": false
