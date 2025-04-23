@@ -1,6 +1,6 @@
 = Tar and Transfer for collections with an associated flow policy
 
-These examples demonstrate how to build **flow**s that are meant to be used as the `associated_flow_policy` for GCS collections. 
+These examples demonstrate how to build **flow**s that are meant to be used as the `associated_flow_policy` for GCS collections.
 They are variations of the Tar and Transfer examples that rather than get the source paths from the user input, they are parsed from the incoming `globus-transfer-transfer#0.10` transfer data.
 
 Each of these examples creates an archive file from the user's files and transfers that archive to a destination.

@@ -40,7 +40,7 @@
       },
       "ResultPath": "$.input_data",
       "Next": "MakeComputeWorkingDir"
-    },    
+    },
     "MakeComputeWorkingDir": {
       "Type": "Action",
       "ActionUrl": "https://transfer.actions.globus.org/mkdir",
