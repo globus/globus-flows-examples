@@ -4,7 +4,7 @@ In this second example, the **flow** takes a `globus-transfer-transfer#0.10` obj
 
 The **flow** transfers the files to the **collection** which is colocated with the Compute **endpoint**, creates a tarfile from them, and transfers the tarfile to a user-provided destination **collection**. This flow behaves the same as its counterpart, the only difference being in that the source files to be tarballed and the desitnation collection are derived from the transfer data rather than the user input. This **flow** will fail if any source paths are the path '/' or contain the character '~'.
 
-The **flow** is intended to be invoked from the Globus webapp when initating a transfer where the **destination** collection has this flow set as the destination in its `associated_flow_policy`.
+The **flow** is intended to be invoked from the Globus webapp when initiating a transfer where the **destination** collection has this flow set as the destination in its `associated_flow_policy`.
 
 The **flow** will:
 

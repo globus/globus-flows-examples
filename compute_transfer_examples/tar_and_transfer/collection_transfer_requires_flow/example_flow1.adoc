@@ -3,7 +3,7 @@ In this first example, the Compute and Transfer **flow** takes a `globus-transfe
 
 The **flow** creates a tarfile from those files and transfers the tarfile to a user-provided destination collection. This **flow** will fail if any source paths are the path '/' or contain the character '~'.
 
-The **flow** is intended to be invoked from the Globus webapp when initating a transfer where the **source** collection has this flow set as the source in its `associated_flow_policy`.
+The **flow** is intended to be invoked from the Globus webapp when initiating a transfer where the **source** collection has this flow set as the source in its `associated_flow_policy`.
 
 The **flow** will:
 
