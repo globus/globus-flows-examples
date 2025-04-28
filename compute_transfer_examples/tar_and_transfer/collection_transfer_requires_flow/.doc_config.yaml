@@ -1,0 +1,32 @@
+# configuration for conversion to docs.globus.org
+title: 'Tar and Transfer for collections with an associated flow policy'
+short_description: |
+    Use Globus Compute to bundle files into a tarball, which you then transfer
+    using Globus Transfer.
+
+    Two examples are included here, one in which the files are located on the
+    server which runs Globus Compute, and one in which the files are on a user's
+    machine and must be moved to the Compute host.
+
+    These two examples are modified versions of the original tar and transfer examples.
+    They are expected to be invoked from the Globus webapp when initating a transfer
+    where the source / destination collections have an `associated_flow_policy`
+    with this flow.
+
+example_dir: 'collection_transfer_requires_flow'
+append_source_blocks: false
+index_source:
+  concat:
+    files:
+      - 'README.adoc'
+      - 'register_function.adoc'
+      - 'example_flow1.adoc'
+      - 'example_flow2.adoc'
+include_files:
+  - 'compute_transfer_example_1_definition.json'
+  - 'compute_transfer_example_1_schema.json'
+  - 'compute_transfer_example_2_definition.json'
+  - 'compute_transfer_example_2_schema.json'
+  - 'register_compute_function.py'
+
+menu_weight: 400

@@ -1,145 +1,125 @@
 {
-  "StartAt": "SetConstants",
+  "StartAt": "SetRunVariables",
   "States": {
-    "SetConstants": {
+    "SetRunVariables": {
       "Type": "ExpressionEval",
       "Parameters": {
         "gcs_endpoint_id": "<INSERT YOUR GCS ENDPOINT ID HERE>",
         "gcs_base_path": "/",
         "compute_endpoint_id": "<INSERT YOUR COMPUTE ENDPOINT ID HERE>",
         "compute_function_id": "<INSERT YOUR COMPUTE FUNCTION ID HERE>",
-        "compute_output_directory.=": "'/' + _context.run_id + '/'"
+        "compute_output_directory.=": "'/' + _context.run_id + '/'",
+        "input_data_valid.=": "['~' in source_path or source_path == '/' for source_path in source_paths] == [False] * len(source_paths)"
       },
-      "ResultPath": "$.constants",
+      "ResultPath": "$.run_vars",
+      "Next": "ValidateInputData"
+    },
+    "ValidateInputData": {
+      "Comment": "Validate that none of the input source paths are the path '/' or contain the character '~'.",
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.run_vars.input_data_valid",
+          "BooleanEquals": false,
+          "Next": "InvalidInputData"
+        }
+      ],
+      "Default": "CollectInputData"
+    },
+    "InvalidInputData": {
+      "Type": "Fail",
+      "Error": "InvalidInputData",
+      "Cause": "Invalid source path found in the flow input data."
+    },
+    "CollectInputData": {
+      "Comment": "Construct a list of source paths to provide to the compute function and the transfer data to move the source paths to the intermidate collection.",
+      "Type": "ExpressionEval",
+      "Parameters": {
+        "src_paths.=": "[run_vars.compute_output_directory + pathsplit(source_path.rstrip('/'))[1] + '/' if source_path.endswith('/') else run_vars.compute_output_directory + pathsplit(source_path)[1] for source_path in source_paths]",
+        "src_to_intermidate_transfer_data.=": "[{'source_path': source_path, 'destination_path': run_vars.compute_output_directory + pathsplit(source_path.rstrip('/'))[1] + '/' if source_path.endswith('/') else run_vars.compute_output_directory + pathsplit(source_path)[1], 'recursive': True if source_path.endswith('/') else False} for source_path in source_paths]"
+      },
+      "ResultPath": "$.input_data",
       "Next": "MakeComputeWorkingDir"
     },
     "MakeComputeWorkingDir": {
       "Type": "Action",
       "ActionUrl": "https://transfer.actions.globus.org/mkdir",
       "Parameters": {
-        "endpoint_id.$": "$.constants.gcs_endpoint_id",
-        "path.$": "$.constants.compute_output_directory"
+        "endpoint_id.$": "$.run_vars.gcs_endpoint_id",
+        "path.$": "$.run_vars.compute_output_directory"
       },
       "ResultPath": "$.mkdir_result",
-      "Next": "SetSourcePathsIteratorVariables"
-    },
-    "SetSourcePathsIteratorVariables": {
-      "Type": "ExpressionEval",
-      "Parameters": {
-        "src_paths_iterator_pos": 0,
-        "compute_src_paths": [],
-        "transfer_from_src_data": []
-      },
-      "ResultPath": "$.iterator_vars",
-      "Next": "EvalShouldIterateSourcePaths"
-    },
-    "EvalShouldIterateSourcePaths": {
-      "Type": "ExpressionEval",
-      "Parameters": {
-        "should_iterate.=": "len(source_paths) > iterator_vars.src_paths_iterator_pos"
-      },
-      "ResultPath": "$.iterate_eval",
-      "Next": "IterateSourcePaths"
-    },
-    "IterateSourcePaths": {
-      "Type": "Choice",
-      "Choices": [
-        {
-          "Variable": "$.iterate_eval.should_iterate",
-          "BooleanEquals": true,
-          "Next": "EvalGetSourcePath"
-        }
-      ],
-      "Default": "TransferToComputeEndpoint"
-    },
-    "EvalGetSourcePath": {
-      "Type": "ExpressionEval",
-      "Parameters": {
-        "source_path.=": "source_paths[iterator_vars.src_paths_iterator_pos]"
-      },
-      "ResultPath": "$.get_path",
-      "Next": "GetSourcePathInfo"
-    },
-    "GetSourcePathInfo": {
-      "Type": "Action",
-      "ActionUrl": "https://transfer.actions.globus.org/stat",
-      "Parameters": {
-        "endpoint_id.$": "$.source_endpoint",
-        "path.$": "$.get_path.source_path"
-      },
-      "ResultPath": "$.source_path_stat_result",
-      "Next": "EvalSourcePathInfo"
-    },
-    "EvalSourcePathInfo": {
-      "Type": "ExpressionEval",
-      "Parameters": {
-        "compute_src_paths.=": "iterator_vars.compute_src_paths + [constants.compute_output_directory + source_path_stat_result.details.name]",
-        "transfer_from_src_data.=": "iterator_vars.transfer_from_src_data + [{'source_path': get_path.source_path, 'destination_path': constants.compute_output_directory + source_path_stat_result.details.name}]",
-        "src_paths_iterator_pos.=": "iterator_vars.src_paths_iterator_pos + 1"
-      },
-      "ResultPath": "$.iterator_vars",
-      "Next": "EvalShouldIterateSourcePaths"
+      "Next": "TransferToComputeEndpoint"
     },
     "TransferToComputeEndpoint": {
       "Type": "Action",
       "ActionUrl": "https://transfer.actions.globus.org/transfer",
       "Parameters": {
         "source_endpoint.$": "$.source_endpoint",
-        "destination_endpoint.$": "$.constants.gcs_endpoint_id",
-        "DATA.$": "$.iterator_vars.transfer_from_src_data"
+        "destination_endpoint.$": "$.run_vars.gcs_endpoint_id",
+        "DATA.$": "$.input_data.src_to_intermidate_transfer_data"
       },
-      "ResultPath": "$.transfer_from_src_result",
+      "ResultPath": "$.src_to_intermidate_transfer_result",
       "Next": "RunComputeFunction"
     },
     "RunComputeFunction": {
       "Type": "Action",
       "ActionUrl": "https://compute.actions.globus.org/v3",
       "Parameters": {
-        "endpoint_id.$": "$.constants.compute_endpoint_id",
+        "endpoint_id.$": "$.run_vars.compute_endpoint_id",
         "tasks": [
           {
-            "function_id.$": "$.constants.compute_function_id",
+            "function_id.$": "$.run_vars.compute_function_id",
             "args": [],
             "kwargs": {
-              "src_paths.$": "$.iterator_vars.compute_src_paths",
-              "dest_path.$": "$.constants.compute_output_directory",
-              "gcs_base_path.$": "$.constants.gcs_base_path"
+              "src_paths.$": "$.input_data.src_paths",
+              "dest_path.$": "$.run_vars.compute_output_directory",
+              "gcs_base_path.$": "$.run_vars.gcs_base_path"
             }
           }
         ]
       },
-      "ResultPath": "$.compute_result",
+      "ResultPath": "$.compute_func_result",
+      "Next": "GetDestinationPath"
+    },
+    "GetDestinationPath": {
+      "Comment": "To get the dest path, check if the variable 'destination_path' exists and if not, default to the filename returned by the compute function.",
+      "Type": "ExpressionEval",
+      "Parameters": {
+        "path.=": "getattr('destination_path', '/~/' + pathsplit(compute_func_result.details.result[0])[1])"
+      },
+      "ResultPath": "$.destination",
       "Next": "TransferFromComputeEndpoint"
     },
     "TransferFromComputeEndpoint": {
       "Type": "Action",
       "ActionUrl": "https://transfer.actions.globus.org/transfer",
       "Parameters": {
-        "source_endpoint.$": "$.constants.gcs_endpoint_id",
-        "destination_endpoint.$": "$.destination.id",
+        "source_endpoint.$": "$.run_vars.gcs_endpoint_id",
+        "destination_endpoint.$": "$.destination_endpoint_id",
         "DATA": [
           {
-            "source_path.=": "compute_result.details.result[0]",
+            "source_path.=": "compute_func_result.details.result[0]",
             "destination_path.$": "$.destination.path"
           }
         ]
       },
-      "ResultPath": "$.transfer_to_dest_result",
+      "ResultPath": "$.intermidate_to_dest_transfer_result",
       "Next": "CleanupComputeEndpoint"
     },
     "CleanupComputeEndpoint": {
       "Type": "Action",
       "ActionUrl": "https://transfer.actions.globus.org/delete",
       "Parameters": {
-        "endpoint.$": "$.constants.gcs_endpoint_id",
+        "endpoint.$": "$.run_vars.gcs_endpoint_id",
         "recursive": true,
         "DATA": [
           {
-            "path.$": "$.constants.compute_output_directory"
+            "path.$": "$.run_vars.compute_output_directory"
           }
         ]
       },
-      "ResultPath": "$.delete_compute_output_result",
+      "ResultPath": "$.delete_result",
       "End": true
     }
   }

@@ -1,8 +1,9 @@
 == Example Flow 1
-
-In this first example, the Compute and Transfer **flow** takes a user-provided list of files that already exist in a preconfigured source **collection**.
+In this first example, the Compute and Transfer **flow** takes a `globus-transfer-transfer#0.10` object from a transfer and determines the source files and desitnation endpoint from
 
 The **flow** creates a tarfile from those files and transfers the tarfile to a user-provided destination collection. This **flow** will fail if any source paths are the path '/' or contain the character '~'.
+
+The **flow** is intended to be invoked from the Globus webapp when initiating a transfer where the **source** collection has this flow set as the source in its `associated_flow_policy`.
 
 The **flow** will:
 
@@ -17,7 +18,6 @@ The **flow** will:
 
 1. Edit `compute_transfer_example_1_definition.json` and replace the placeholder values:
 
-   - `gcs_endpoint_id`: The source **collection** ID
    - `compute_endpoint_id`: The Compute **endpoint** ID
    - `compute_function_id`: The UUID of the registered `do_tar` **function**
 
@@ -63,12 +63,10 @@ endif::[]
 [source,json,role=clippable-code]
 ----
 {
-    "source_paths": ["/path/to/file1", "/path/to/file2"],
     "destination_path": "/path/to/your/destination/file.tar.gz",
-    "destination_endpoint_id": "your-destination-endpoint-uuid"
 }
 ----
-
++
 [NOTE]
 ======
 `destination_path` is an optional property. If left unset, the flow will try to save the output tarball to `/~/<random UUID>.tar.gz`.

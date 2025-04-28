@@ -4,38 +4,45 @@
     "SetRunVariables": {
       "Type": "ExpressionEval",
       "Parameters": {
-        "gcs_endpoint_id": "<INSERT YOUR GCS ENDPOINT ID HERE>",
         "gcs_base_path": "/",
         "compute_endpoint_id": "<INSERT YOUR COMPUTE ENDPOINT ID HERE>",
         "compute_function_id": "<INSERT YOUR COMPUTE FUNCTION ID HERE>",
         "compute_output_directory.=": "'/' + _context.run_id + '/'",
-        "input_data_valid.=": "['~' in source_path or source_path == '/' for source_path in source_paths] == [False] * len(source_paths)"
+        "input_data_valid.=": "['~' in transfer_data.source_path or transfer_data.source_path == '/' for transfer_data in transfer_settings.DATA] == [False] * len(transfer_settings.DATA)"
       },
       "ResultPath": "$.run_vars",
-      "Next": "ValidateInputData"
+      "Next": "ValidateTransferData"
     },
-    "ValidateInputData": {
+    "ValidateTransferData": {
       "Comment": "Validate that none of the input source paths are the path '/' or contain the character '~'.",
       "Type": "Choice",
       "Choices": [
         {
           "Variable": "$.run_vars.input_data_valid",
           "BooleanEquals": false,
-          "Next": "InvalidInputData"
+          "Next": "InvalidTransferData"
         }
       ],
-      "Default": "MakeComputeWorkingDir"
+      "Default": "CollectSourcePaths"
     },
-    "InvalidInputData": {
+    "InvalidTransferData": {
       "Type": "Fail",
-      "Error": "InvalidInputData",
-      "Cause": "Invalid source path found in the flow input data."
+      "Error": "InvalidTransferData",
+      "Cause": "Invalid source path found in input transfer data."
+    },
+    "CollectSourcePaths": {
+      "Type": "ExpressionEval",
+      "Parameters": {
+        "paths.=": "[item.source_path for item in transfer_settings.DATA]"
+      },
+      "ResultPath": "$.src",
+      "Next": "MakeComputeWorkingDir"
     },
     "MakeComputeWorkingDir": {
       "Type": "Action",
       "ActionUrl": "https://transfer.actions.globus.org/mkdir",
       "Parameters": {
-        "endpoint_id.$": "$.run_vars.gcs_endpoint_id",
+        "endpoint_id.$": "$.transfer_settings.source_endpoint",
         "path.$": "$.run_vars.compute_output_directory"
       },
       "ResultPath": "$.mkdir_result",
@@ -51,7 +58,7 @@
             "function_id.$": "$.run_vars.compute_function_id",
             "args": [],
             "kwargs": {
-              "src_paths.$": "$.source_paths",
+              "src_paths.$": "$.src.paths",
               "dest_path.$": "$.run_vars.compute_output_directory",
               "gcs_base_path.$": "$.run_vars.gcs_base_path"
             }
@@ -74,8 +81,8 @@
       "Type": "Action",
       "ActionUrl": "https://transfer.actions.globus.org/transfer",
       "Parameters": {
-        "source_endpoint.$": "$.run_vars.gcs_endpoint_id",
-        "destination_endpoint.$": "$.destination_endpoint_id",
+        "source_endpoint.$": "$.transfer_settings.source_endpoint",
+        "destination_endpoint.$": "$.transfer_settings.destination_endpoint",
         "DATA": [
           {
             "source_path.=": "compute_func_result.details.result[0]",
@@ -90,7 +97,7 @@
       "Type": "Action",
       "ActionUrl": "https://transfer.actions.globus.org/delete",
       "Parameters": {
-        "endpoint.$": "$.run_vars.gcs_endpoint_id",
+        "endpoint.$": "$.transfer_settings.source_endpoint",
         "recursive": true,
         "DATA": [
           {

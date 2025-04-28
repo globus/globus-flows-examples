@@ -1,0 +1,49 @@
+= Tar and Transfer for collections with an associated flow policy
+
+These examples demonstrate how to build **flow**s that are meant to be used as the `associated_flow_policy` for GCS collections.
+They are variations of the Tar and Transfer examples that rather than get the source paths from the user input, they are parsed from the incoming `globus-transfer-transfer#0.10` transfer data.
+
+Each of these examples creates an archive file from the user's files and transfers that archive to a destination.
+In one case the source data is already on the server running Globus Connect Server and Globus Compute, and in the other it is on a source **collection** owned by the end user.
+
+== Prerequisites
+
+To run these examples, you must have a properly configured server and some local software installed.
+
+You must have a co-located Globus Connect Server Collection and Globus Compute **endpoint**, either hosted on the same server or at least with access to a shared filesystem.
+
+Globus Connect Server Collection::
++
+You can follow
+link:https://docs.globus.org/globus-connect-server/v5.4/[this guide for setting up a Globus Connect Server Collection]
+to install Globus Connect Server and configure a **collection**.
++
+For ease of use, we recommend using a Guest Collection.
+
+Globus Compute Endpoint::
++
+link:https://globus-compute.readthedocs.io/en/latest/endpoints/installation.html[This guide for setting up a Globus Compute Endpoint]
+covers installation of the Globus Compute software.
++
+This Compute **endpoint** must have read/write permissions on the same storage location where the Globus Connect Server **ollection** is hosted.
+
+Globus CLI::
++
+You will also need the Globus CLI installed (link:https://docs.globus.org/cli/#installation[CLI installation docs]).
++
+Globus CLI documentation recommends installation with `pipx`, as in `pipx install globus-cli`.
+
+Globus Compute SDK::
++
+You must have the `globus-compute-sdk` Python package available.
+We strongly recommend using a virtual environment for this installation; installing with `pip install globus-compute-sdk`.
++
+You can follow
+link:https://globus-compute.readthedocs.io/en/stable/quickstart.html#installation[the Globus Compute install documentation]
+to install the Compute SDK client package in a virtualenv.
+
+ifdef::env-github[]
+== Next: Learn About the `do_tar` Compute **Function**
+
+link:../register_function.adoc[Register the `do_tar` Compute **Function**.]
+endif::[]

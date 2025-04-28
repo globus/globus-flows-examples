@@ -9,27 +9,37 @@
         "compute_endpoint_id": "<INSERT YOUR COMPUTE ENDPOINT ID HERE>",
         "compute_function_id": "<INSERT YOUR COMPUTE FUNCTION ID HERE>",
         "compute_output_directory.=": "'/' + _context.run_id + '/'",
-        "input_data_valid.=": "['~' in source_path or source_path == '/' for source_path in source_paths] == [False] * len(source_paths)"
+        "input_data_valid.=": "['~' in transfer_data.source_path or transfer_data.source_path == '/' for transfer_data in transfer_settings.DATA] == [False] * len(transfer_settings.DATA)"
       },
       "ResultPath": "$.run_vars",
-      "Next": "ValidateInputData"
+      "Next": "ValidateTransferData"
     },
-    "ValidateInputData": {
+    "ValidateTransferData": {
       "Comment": "Validate that none of the input source paths are the path '/' or contain the character '~'.",
       "Type": "Choice",
       "Choices": [
         {
           "Variable": "$.run_vars.input_data_valid",
-          "BooleanEquals": false,
-          "Next": "InvalidInputData"
+          "BooleanEquals": true,
+          "Next": "CollectTransferData"
         }
       ],
-      "Default": "MakeComputeWorkingDir"
+      "Default": "InvalidTransferData"
     },
-    "InvalidInputData": {
+    "InvalidTransferData": {
       "Type": "Fail",
-      "Error": "InvalidInputData",
-      "Cause": "Invalid source path found in the flow input data."
+      "Error": "InvalidTransferData",
+      "Cause": "Invalid source path in input transfer data."
+    },
+    "CollectTransferData": {
+      "Comment": "Construct a list of source paths to provide to the compute function and the transfer data to move the source paths to the intermidate collection.",
+      "Type": "ExpressionEval",
+      "Parameters": {
+        "src_paths.=": "[run_vars.compute_output_directory + pathsplit(transfer_data.source_path.rstrip('/'))[1] + '/' if transfer_data.source_path.endswith('/') else run_vars.compute_output_directory + pathsplit(transfer_data.source_path)[1] for transfer_data in transfer_settings.DATA]",
+        "src_to_intermidate_transfer_data.=": "[{'source_path': transfer_data.source_path, 'destination_path': run_vars.compute_output_directory + pathsplit(transfer_data.source_path.rstrip('/'))[1] + '/' if transfer_data.source_path.endswith('/') else run_vars.compute_output_directory + pathsplit(transfer_data.source_path)[1], 'DATA_TYPE': transfer_data.DATA_TYPE, 'recursive': transfer_data.recursive} for transfer_data in transfer_settings.DATA]"
+      },
+      "ResultPath": "$.transfer_data",
+      "Next": "MakeComputeWorkingDir"
     },
     "MakeComputeWorkingDir": {
       "Type": "Action",
@@ -39,6 +49,17 @@
         "path.$": "$.run_vars.compute_output_directory"
       },
       "ResultPath": "$.mkdir_result",
+      "Next": "TransferToComputeEndpoint"
+    },
+    "TransferToComputeEndpoint": {
+      "Type": "Action",
+      "ActionUrl": "https://transfer.actions.globus.org/transfer",
+      "Parameters": {
+        "source_endpoint.$": "$.transfer_settings.source_endpoint",
+        "destination_endpoint.$": "$.run_vars.gcs_endpoint_id",
+        "DATA.$": "$.transfer_data.src_to_intermidate_transfer_data"
+      },
+      "ResultPath": "$.transfer_from_src_result",
       "Next": "RunComputeFunction"
     },
     "RunComputeFunction": {
@@ -51,7 +72,7 @@
             "function_id.$": "$.run_vars.compute_function_id",
             "args": [],
             "kwargs": {
-              "src_paths.$": "$.source_paths",
+              "src_paths.$": "$.transfer_data.src_paths",
               "dest_path.$": "$.run_vars.compute_output_directory",
               "gcs_base_path.$": "$.run_vars.gcs_base_path"
             }
@@ -75,7 +96,7 @@
       "ActionUrl": "https://transfer.actions.globus.org/transfer",
       "Parameters": {
         "source_endpoint.$": "$.run_vars.gcs_endpoint_id",
-        "destination_endpoint.$": "$.destination_endpoint_id",
+        "destination_endpoint.$": "$.transfer_settings.destination_endpoint",
         "DATA": [
           {
             "source_path.=": "compute_func_result.details.result[0]",
@@ -83,7 +104,7 @@
           }
         ]
       },
-      "ResultPath": "$.transfer_result",
+      "ResultPath": "$.transfer_to_dest_result",
       "Next": "CleanupComputeEndpoint"
     },
     "CleanupComputeEndpoint": {
@@ -98,7 +119,7 @@
           }
         ]
       },
-      "ResultPath": "$.delete_result",
+      "ResultPath": "$.delete_compute_output_result",
       "End": true
     }
   }
