@@ -66,7 +66,7 @@ endif::[]
     "destination_path": "/path/to/your/destination/file.tar.gz",
 }
 ----
-
++
 [NOTE]
 ======
 `destination_path` is an optional property. If left unset, the flow will try to save the output tarball to `/~/<random UUID>.tar.gz`.
