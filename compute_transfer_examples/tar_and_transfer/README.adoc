@@ -24,7 +24,7 @@ Globus Compute Endpoint::
 link:https://globus-compute.readthedocs.io/en/latest/endpoints/installation.html[This guide for setting up a Globus Compute Endpoint]
 covers installation of the Globus Compute software.
 +
-This Compute **endpoint** must have read/write permissions on the same storage location where the Globus Connect Server **ollection** is hosted.
+This Compute **endpoint** must have read/write permissions on the same storage location where the Globus Connect Server **collection** is hosted.
 
 Globus CLI::
 +
