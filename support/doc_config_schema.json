@@ -30,6 +30,9 @@
     },
     "menu_weight": {
       "type": "integer"
+    },
+    "include_ide_link": {
+      "type": "boolean"
     }
   },
   "required": [

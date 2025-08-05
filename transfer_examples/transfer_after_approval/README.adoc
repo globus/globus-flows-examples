@@ -1,5 +1,7 @@
 = Transfer After Approval
 
+link:{flows_ide_link}[Try it out in the Flows IDE.^]
+
 == Description
 
 Allow users to submit an approval request to transfer a file to a destination Guest Collection.

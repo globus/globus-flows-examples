@@ -1,5 +1,7 @@
 = Move (copy and delete) files
 
+link:{flows_ide_link}[Try it out in the Flows IDE.^]
+
 == Description
 
 Perform a 'move' operation on a directory by first transferring from a source to a destination and then deleting from the source.

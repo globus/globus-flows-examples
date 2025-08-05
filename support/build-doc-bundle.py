@@ -7,14 +7,18 @@
 
 from __future__ import annotations
 
+import base64
 import dataclasses
 import glob
+import gzip
 import io
+import json
 import os
 import pathlib
 import tarfile
 import textwrap
 import typing as t
+import urllib.parse
 
 try:
     import click
@@ -83,6 +87,24 @@ def find_build_configs() -> t.Iterator[pathlib.Path]:
         yield pathlib.Path(item)
 
 
+def build_ide_link(source_dir: pathlib.Path) -> str:
+    definition = _encode_link_part(source_dir / "definition.json")
+    input_schema = _encode_link_part(source_dir / "input_schema.json")
+    return (
+        "https://globus.github.io/flows-ide?format=gzip&"
+        f"d={definition}&s={input_schema}"
+    )
+
+
+def _encode_link_part(source_path: pathlib.Path) -> str:
+    # load and dump JSON to strip whitespace
+    loaded_doc = json.loads(source_path.read_bytes())
+    doc_bytes = json.dumps(loaded_doc, separators=(",", ":")).encode("utf-8")
+    gzipped_doc = gzip.compress(doc_bytes)
+    b64_gzipped_doc = base64.b64encode(gzipped_doc)
+    return urllib.parse.quote_from_bytes(b64_gzipped_doc.rstrip(b"="))
+
+
 def render_example_index_doc(
     source_dir: pathlib.Path, config: ExampleDocBuildConfig
 ) -> bytes:
@@ -103,22 +125,36 @@ def render_example_index_doc(
 
     if config.append_source_blocks:
         content = append_source_blocks(content)
-    content = prepend_preamble(config, content)
+
+    ide_link: str | None = None
+    if config.include_ide_link:
+        ide_link = build_ide_link(source_dir)
+
+    content = prepend_preamble(config, ide_link, content)
     return content
 
 
-def prepend_preamble(config: ExampleDocBuildConfig, content: bytes) -> bytes:
-    return (
-        textwrap.dedent(
-            f"""\
-            ---
-            menu_weight: {config.menu_weight}
-            ---
+def prepend_preamble(
+    config: ExampleDocBuildConfig, ide_link: str | None, content: bytes
+) -> bytes:
+    preamble = textwrap.dedent(
+        f"""\
+        ---
+        menu_weight: {config.menu_weight}
+        ---
+
+        """
+    )
+
+    if ide_link is not None:
+        preamble += textwrap.dedent(
+            f"""
+            :flows_ide_link: {ide_link}
 
             """
-        ).encode("utf-8")
-        + content
-    )
+        )
+
+    return preamble.encode("utf-8") + content
 
 
 def append_source_blocks(content: bytes) -> bytes:
@@ -208,6 +244,7 @@ class ExampleDocBuildConfig:
     index_source: IndexSourceConfig
     append_source_blocks: bool
     menu_weight: int
+    include_ide_link: bool
     include_files: list[str]
 
     @classmethod
@@ -220,6 +257,7 @@ class ExampleDocBuildConfig:
             index_source=IndexSourceConfig._load(data["index_source"]),
             append_source_blocks=data["append_source_blocks"],
             menu_weight=data["menu_weight"],
+            include_ide_link=data.get("include_ide_link", True),
             # fill the default files to include if not present
             include_files=data.get(
                 "include_files",

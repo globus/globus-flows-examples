@@ -1,5 +1,7 @@
 = Looping Batched Move
 
+link:{flows_ide_link}[Try it out in the Flows IDE.^]
+
 [TIP]
 =====
 This example is a demonstration of looping in a **flow**.
