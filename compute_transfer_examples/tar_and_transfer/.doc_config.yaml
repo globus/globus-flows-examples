@@ -7,6 +7,7 @@ short_description: |
     Two examples are included here, one in which the files are located on the
     server which runs Globus Compute, and one in which the files are on a user's
     machine and must be moved to the Compute host.
+include_ide_link: false
 
 example_dir: 'compute_tar_and_transfer'
 append_source_blocks: false

@@ -1,5 +1,7 @@
 = Transfer and Share Files
 
+link:{flows_ide_link}[Try it out in the Flows IDE.^]
+
 == Description
 
 Move and share files by transferring them to a Guest Collection.

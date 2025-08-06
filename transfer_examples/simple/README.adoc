@@ -1,5 +1,7 @@
 = Simple Transfer
 
+link:{flows_ide_link}[Try it out in the Flows IDE.^]
+
 == Description
 
 Do a single file or directory transfer with a 15 minute time limit.

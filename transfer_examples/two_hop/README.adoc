@@ -1,5 +1,7 @@
 = Two Stage Globus Transfer
 
+link:{flows_ide_link}[Try it out in the Flows IDE.^]
+
 == Description
 
 Transfer from source to intermediate and then from intermediate to destination.
