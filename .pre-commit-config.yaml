@@ -8,7 +8,7 @@ repos:
       - id: check-useless-excludes
 
   - repo: "https://github.com/pre-commit/pre-commit-hooks"
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: check-merge-conflict
       - id: trailing-whitespace
@@ -23,7 +23,7 @@ repos:
         args: ["--ignore-regex", "https://[^\\s]*"]
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.33.2
+    rev: 0.34.0
     hooks:
       - id: check-github-workflows
       - id: check-jsonschema
@@ -32,12 +32,12 @@ repos:
         types: [yaml]
 
   - repo: "https://github.com/sirosen/texthooks"
-    rev: 0.6.8
+    rev: 0.7.1
     hooks:
       - id: alphabetize-codeowners
 
   - repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 25.1.0
+    rev: 25.9.0
     hooks:
       - id: black
 
