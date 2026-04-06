@@ -17,13 +17,13 @@ repos:
         args: ["--autofix", "--no-sort-keys"]
 
   - repo: "https://github.com/codespell-project/codespell"
-    rev: v2.4.1
+    rev: v2.4.2
     hooks:
       - id: codespell
         args: ["--ignore-regex", "https://[^\\s]*"]
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.36.0
+    rev: 0.37.1
     hooks:
       - id: check-github-workflows
       - id: check-jsonschema
@@ -37,7 +37,7 @@ repos:
       - id: alphabetize-codeowners
 
   - repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 25.12.0
+    rev: 26.3.1
     hooks:
       - id: black
 
