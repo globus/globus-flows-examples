@@ -137,31 +137,24 @@ def render_example_index_doc(
 def prepend_preamble(
     config: ExampleDocBuildConfig, ide_link: str | None, content: bytes
 ) -> bytes:
-    preamble = textwrap.dedent(
-        f"""\
+    preamble = textwrap.dedent(f"""\
         ---
         menu_weight: {config.menu_weight}
         ---
 
-        """
-    )
+        """)
 
     if ide_link is not None:
-        preamble += textwrap.dedent(
-            f"""
+        preamble += textwrap.dedent(f"""
             :flows_ide_link: {ide_link}
 
-            """
-        )
+            """)
 
     return preamble.encode("utf-8") + content
 
 
 def append_source_blocks(content: bytes) -> bytes:
-    return (
-        content
-        + textwrap.dedent(
-            """
+    return content + textwrap.dedent("""
             == Source code
 
             [.accordionize]
@@ -199,13 +192,10 @@ def append_source_blocks(content: bytes) -> bytes:
             ----
             ====
             --
-            """
-        ).encode("utf-8")
-    )
+            """).encode("utf-8")
 
 
-INDEX_TEMPLATE = jinja2.Template(
-    """\
+INDEX_TEMPLATE = jinja2.Template("""\
 ---
 menu_weight: 180
 ---
@@ -217,8 +207,7 @@ link:{{ item.example_dir }}/[{{ item.title }}]::
 +
 {{ item.short_description | replace("\n\n", "\n+\n") }}
 {% endfor %}
-"""
-)
+""")
 
 
 def build_index_doc(configs: list[ExampleDocBuildConfig]) -> bytes:
