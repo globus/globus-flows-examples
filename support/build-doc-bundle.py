@@ -195,7 +195,7 @@ def append_source_blocks(content: bytes) -> bytes:
             """).encode("utf-8")
 
 
-INDEX_TEMPLATE = jinja2.Template("""\
+INDEX_TEMPLATE: jinja2.Template = jinja2.Template("""\
 ---
 menu_weight: 180
 ---
