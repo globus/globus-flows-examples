@@ -21,6 +21,6 @@ jobs:
               - "build_doc_bundle"
             cache-paths:
               - ".mypy_cache/"
-    uses: "globus/workflows/.github/workflows/tox.yaml@f41714f6a8b102569807b348fce50960f9617df8" # v1.2
+    uses: 'globus/workflows/.github/workflows/tox.yaml@9cb0a9d3c117062037aefaaa816116e9db1f241f' # v1.4
     with:
       config: "${{ toJSON(matrix) }}"
