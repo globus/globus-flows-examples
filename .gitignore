@@ -16,3 +16,4 @@ env/
 .mypy_cache/
 .dmypy.json
 dmypy.json
+doc_bundle.tar.gz
