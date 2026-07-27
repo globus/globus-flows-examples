@@ -8,7 +8,7 @@ repos:
       - id: check-useless-excludes
 
   - repo: "https://github.com/pre-commit/pre-commit-hooks"
-    rev: v6.0.0
+    rev: '3e8a8703264a2f4a69428a0aa4dcb512790b2c8c'  # frozen: v6.0.0
     hooks:
       - id: check-merge-conflict
       - id: trailing-whitespace
@@ -17,13 +17,13 @@ repos:
         args: ["--autofix", "--no-sort-keys"]
 
   - repo: "https://github.com/codespell-project/codespell"
-    rev: v2.4.2
+    rev: '2ccb47ff45ad361a21071a7eedda4c37e6ae8c5a'  # frozen: v2.4.2
     hooks:
       - id: codespell
         args: ["--ignore-regex", "https://[^\\s]*"]
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.37.4
+    rev: '6b63472e72e1a91ed8a2f6d483790dfb644fa1d3'  # frozen: 0.37.4
     hooks:
       - id: check-github-workflows
       - id: check-jsonschema
@@ -32,20 +32,20 @@ repos:
         types: [yaml]
 
   - repo: "https://github.com/sirosen/texthooks"
-    rev: 0.7.1
+    rev: '869eecde9a62460e123fa60b83858fac426163e8'  # frozen: 0.7.1
     hooks:
       - id: alphabetize-codeowners
 
   - repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 26.5.1
+    rev: '4160603246a6b365d4a2af661c6d71b0a0f50478'  # frozen: 26.5.1
     hooks:
       - id: black
 
   - repo: https://github.com/PyCQA/flake8
-    rev: 7.3.0
+    rev: 'c48217e1fc006c2dddd14df54e83b67da15de5cd'  # frozen: 7.3.0
     hooks:
       - id: flake8
         additional_dependencies:
-          - 'flake8-bugbear==24.12.12'
-          - 'flake8-comprehensions==3.16.0'
-          - 'flake8-typing-as-t==1.0.0'
+          - 'flake8-bugbear==25.11.29'
+          - 'flake8-comprehensions==3.17.0'
+          - 'flake8-typing-as-t==1.1.0'
