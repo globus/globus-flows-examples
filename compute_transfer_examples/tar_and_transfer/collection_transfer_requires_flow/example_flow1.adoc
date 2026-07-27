@@ -1,5 +1,5 @@
 == Example Flow 1
-In this first example, the Compute and Transfer **flow** takes a `globus-transfer-transfer#0.10` object from a transfer and determines the source files and desitnation endpoint from
+In this first example, the Compute and Transfer **flow** takes a `globus-transfer-transfer#0.10` object from a transfer and determines the source files and destination endpoint from
 
 The **flow** creates a tarfile from those files and transfers the tarfile to a user-provided destination collection. This **flow** will fail if any source paths are the path '/' or contain the character '~'.
 
