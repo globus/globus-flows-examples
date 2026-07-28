@@ -32,11 +32,11 @@
       "Cause": "Invalid source path found in the flow input data."
     },
     "CollectInputData": {
-      "Comment": "Construct a list of source paths to provide to the compute function and the transfer data to move the source paths to the intermidate collection.",
+      "Comment": "Construct a list of source paths to provide to the compute function and the transfer data to move the source paths to the intermediate collection.",
       "Type": "ExpressionEval",
       "Parameters": {
         "src_paths.=": "[run_vars.compute_output_directory + pathsplit(source_path.rstrip('/'))[1] + '/' if source_path.endswith('/') else run_vars.compute_output_directory + pathsplit(source_path)[1] for source_path in source_paths]",
-        "src_to_intermidate_transfer_data.=": "[{'source_path': source_path, 'destination_path': run_vars.compute_output_directory + pathsplit(source_path.rstrip('/'))[1] + '/' if source_path.endswith('/') else run_vars.compute_output_directory + pathsplit(source_path)[1], 'recursive': True if source_path.endswith('/') else False} for source_path in source_paths]"
+        "src_to_intermediate_transfer_data.=": "[{'source_path': source_path, 'destination_path': run_vars.compute_output_directory + pathsplit(source_path.rstrip('/'))[1] + '/' if source_path.endswith('/') else run_vars.compute_output_directory + pathsplit(source_path)[1], 'recursive': True if source_path.endswith('/') else False} for source_path in source_paths]"
       },
       "ResultPath": "$.input_data",
       "Next": "MakeComputeWorkingDir"
@@ -57,9 +57,9 @@
       "Parameters": {
         "source_endpoint.$": "$.source_endpoint",
         "destination_endpoint.$": "$.run_vars.gcs_endpoint_id",
-        "DATA.$": "$.input_data.src_to_intermidate_transfer_data"
+        "DATA.$": "$.input_data.src_to_intermediate_transfer_data"
       },
-      "ResultPath": "$.src_to_intermidate_transfer_result",
+      "ResultPath": "$.src_to_intermediate_transfer_result",
       "Next": "RunComputeFunction"
     },
     "RunComputeFunction": {
@@ -104,7 +104,7 @@
           }
         ]
       },
-      "ResultPath": "$.intermidate_to_dest_transfer_result",
+      "ResultPath": "$.intermediate_to_dest_transfer_result",
       "Next": "CleanupComputeEndpoint"
     },
     "CleanupComputeEndpoint": {

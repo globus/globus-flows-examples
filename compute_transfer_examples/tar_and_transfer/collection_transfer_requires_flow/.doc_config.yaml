@@ -9,7 +9,7 @@ short_description: |
     machine and must be moved to the Compute host.
 
     These two examples are modified versions of the original tar and transfer examples.
-    They are expected to be invoked from the Globus webapp when initating a transfer
+    They are expected to be invoked from the Globus webapp when initiating a transfer
     where the source / destination collections have an `associated_flow_policy`
     with this flow.
 include_ide_link: false
