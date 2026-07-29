@@ -1,0 +1,76 @@
+= Evaluate preliminary results
+
+link:{flows_ide_link}[Try it out in the Flows IDE.^]
+
+== Description
+
+Sometimes when running an experiment, it's necessary to evaluate preliminary results
+to confirm that the sample is oriented or aligned correctly,
+or to confirm that the instrument is properly calibrated.
+
+The flow in this example is designed with this process in mind.
+
+* Users start the flow by providing an experiment ID.
+* A Globus Compute function is run to get preliminary experiment results.
+* A Web Input is created with several options:
+
+** ✅ Continue the experiment
+** ⏳ Re-evaluate in 30 minutes
+** ❌ Stop the experiment
+
+The user is only allowed to re-evaluate once.
+
+== Highlights
+
+* Options are dynamically are created, demonstrating that more complex selections can be created.
+* A one-time retry attempt is allowed in the flow.
+
+== Source code
+
+[.accordionize]
+--
+.Globus Compute function code
+[%collapsible]
+====
+[source,python,role=clippable-code]
+----
+include::function.py[]
+----
+====
+--
+
+[.accordionize]
+--
+.Flow definition
+[%collapsible]
+====
+[source,json,role=clippable-code]
+----
+include::definition.json[]
+----
+====
+--
+
+[.accordionize]
+--
+.Input Schema
+[%collapsible]
+====
+[source,json,role=clippable-code]
+----
+include::input_schema.json[]
+----
+====
+--
+
+[.accordionize]
+--
+.Example Input
+[%collapsible]
+====
+[source,json]
+----
+include::sample_input.json[]
+----
+====
+--

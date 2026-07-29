@@ -1,0 +1,166 @@
+{
+  "Comment": "Evaluate an experiment to determine if it should continue",
+  "StartAt": "Init",
+  "States": {
+    "Init": {
+      "Comment": "Initialize the flow state. Start with 3 possible options.",
+      "Type": "Pass",
+      "Parameters": {
+        "web_input_options": [
+          {
+            "Value": "continue",
+            "Label": "✅ Continue the experiment",
+            "Description": "Run the experiment to completion."
+          },
+          {
+            "Value": "retry",
+            "Label": "⏳ Re-evaluate in 30 minutes",
+            "Description": "Wait 30 minutes, then re-run the analysis."
+          },
+          {
+            "Value": "halt",
+            "Label": "❌ Stop the experiment",
+            "Description": "The results don't look right. Stop here."
+          }
+        ]
+      },
+      "ResultPath": "$.state",
+      "Next": "GetPreliminaryResults"
+    },
+    "GetPreliminaryResults": {
+      "Comment": "Generate the report using a Globus Compute function",
+      "Type": "Action",
+      "Handler": {
+        "Type": "ActionProvider",
+        "Url": "https://compute.actions.globus.org/v3"
+      },
+      "Parameters": {
+        "endpoint_id": "11111111-2222-3333-4444-555555555555",
+        "tasks": [
+          {
+            "function_id": "11111111-2222-3333-4444-555555555555",
+            "kwargs": {
+              "experiment_id.$": "$.experiment_id"
+            }
+          }
+        ]
+      },
+      "ResultPath": "$.eval_results",
+      "Next": "RehomeEvalResults"
+    },
+    "RehomeEvalResults": {
+      "Type": "Pass",
+      "InputPath": "$.eval_results.details.results[0].output",
+      "ResultPath": "$.eval_results",
+      "Next": "CreateWebInput"
+    },
+    "CreateWebInput": {
+      "Type": "CreateWebInput",
+      "Parameters": {
+        "InputType": "Selection",
+        "Context": {
+          "PresentationStyle": "Table",
+          "Title.=": "'Experiment \"' + `$.experiment_id` + '\": continue or halt?'",
+          "Rows": [
+            {
+              "Field": "Experiment ID",
+              "Value.$": "$.experiment_id"
+            },
+            {
+              "Field": "Total runtime",
+              "Value.$": "$.eval_results.experiment_runtime"
+            },
+            {
+              "Field": "Noise levels (dB)",
+              "Value.$": "$.eval_results.measured_db"
+            },
+            {
+              "Field": "Histogram skew",
+              "Value.$": "$.eval_results.histogram_skew"
+            },
+            {
+              "Field": "Confidence (%)",
+              "Value.$": "$.eval_results.confidence_pct"
+            }
+          ]
+        },
+        "Options.$": "$.state.web_input_options",
+        "RespondentUrns": [
+          "urn:globus:group:id:11111111-2222-3333-4444-555555555555"
+        ]
+      },
+      "ResultPath": "$.web_input_info",
+      "Next": "EraseRetryOption"
+    },
+    "EraseRetryOption": {
+      "Comment": "Rewrite the options to eliminate the retry option.",
+      "Type": "Pass",
+      "Parameters": {
+        "web_input_options": [
+          {
+            "Value": "continue",
+            "Label": "✅ Continue the experiment",
+            "Description": "Run the experiment to completion."
+          },
+          {
+            "Value": "halt",
+            "Label": "❌ Stop the experiment",
+            "Description": "The results don't look right. Stop here."
+          }
+        ]
+      },
+      "ResultPath": "$.state",
+      "Next": "AwaitResponse"
+    },
+    "AwaitResponse": {
+      "Comment": "Wait for a determination whether to continue the experiment. Default to 'Halt'.",
+      "Type": "AwaitWebInput",
+      "Parameters": {
+        "web_input_id.$": "$.web_input_info.web_input_id"
+      },
+      "ResultPath": "$.response_info",
+      "Next": "EvaluateResponse",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "Flows.WebInputExpired"
+          ],
+          "Next": "HaltExperiment",
+          "ResultPath": "$.response_info"
+        }
+      ]
+    },
+    "EvaluateResponse": {
+      "Comment": "Branch to the correct state based on the user response.",
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.response_info.response",
+          "StringEquals": "continue",
+          "Next": "ContinueExperiment"
+        },
+        {
+          "Variable": "$.response_info.response",
+          "StringEquals": "retry",
+          "Next": "Wait"
+        }
+      ],
+      "Default": "HaltExperiment"
+    },
+    "ContinueExperiment": {
+      "Comment": "This might be replaced with a Registered API call or another Globus Compute function call.",
+      "Type": "Pass",
+      "End": true
+    },
+    "HaltExperiment": {
+      "Type": "Fail",
+      "Cause": "The user halted the experiment."
+    },
+    "Wait": {
+      "Comment": "Wait 30 minutes (1,800 seconds) and re-evaluate the results.",
+      "Type": "Wait",
+      "Seconds": 1800,
+      "Next": "GetPreliminaryResults"
+    }
+  }
+}

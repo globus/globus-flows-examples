@@ -1,0 +1,13 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "experiment_id"
+  ],
+  "properties": {
+    "experiment_id": {
+      "title": "Experiment ID",
+      "type": "string"
+    }
+  }
+}
