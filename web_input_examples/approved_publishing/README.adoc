@@ -1,0 +1,69 @@
+= Approved publication
+
+link:{flows_ide_link}[Try it out in the Flows IDE.^]
+
+== Description
+
+Web Inputs can be used to gate publication of reports.
+
+This example demonstrates this hypothetical workflow:
+
+* An instrument has generated some data that must be analyzed.
+* A user starts this example flow and selects a path on a collection as the flow input.
+* The collection ID and path are passed to a Globus Compute function
+  which analyzes the data, generates a PDF, and returns some info about the analysis.
+* A Web Input is created so an admin group can decide whether to publish the report.
+
+In the example flow, the report is always ingested to Globus Search,
+but it is only visible to a private group by default.
+If an administrator approves publication, the report is made visible to the public.
+
+== Source code
+
+[.accordionize]
+--
+.Globus Compute function code
+[%collapsible]
+====
+[source,python,role=clippable-code]
+----
+include::function.py[]
+----
+====
+--
+
+[.accordionize]
+--
+.Flow definition
+[%collapsible]
+====
+[source,json,role=clippable-code]
+----
+include::definition.json[]
+----
+====
+--
+
+[.accordionize]
+--
+.Input Schema
+[%collapsible]
+====
+[source,json,role=clippable-code]
+----
+include::input_schema.json[]
+----
+====
+--
+
+[.accordionize]
+--
+.Example Input
+[%collapsible]
+====
+[source,json]
+----
+include::sample_input.json[]
+----
+====
+--

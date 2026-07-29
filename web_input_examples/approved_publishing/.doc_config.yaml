@@ -1,0 +1,19 @@
+# configuration for conversion to docs.globus.org
+title: 'Approve publication'
+short_description: |
+  Generate a report from a data set using a Globus Compute function,
+  then request publication approval before ingesting to Globus Search.
+
+example_dir: 'approve_publishing'
+index_source:
+  copy: "README.adoc"
+append_source_blocks: false
+
+include_files:
+  - 'function.py'
+  # All common files must be explicitly listed when setting `include_files`.
+  - 'definition.json'
+  - 'input_schema.json'
+  - 'sample_input.json'
+
+menu_weight: 200
