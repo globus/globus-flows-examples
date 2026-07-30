@@ -4,7 +4,7 @@ short_description: |
   Generate a report from a data set using a Globus Compute function,
   then request publication approval before ingesting to Globus Search.
 
-example_dir: 'approve_publishing'
+example_dir: 'approved_publishing'
 index_source:
   copy: "README.adoc"
 append_source_blocks: false

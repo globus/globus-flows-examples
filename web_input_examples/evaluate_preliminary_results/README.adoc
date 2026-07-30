@@ -22,7 +22,7 @@ The user is only allowed to re-evaluate once.
 
 == Highlights
 
-* Options are dynamically are created, demonstrating that more complex selections can be created.
+* Options are dynamically created, demonstrating that more complex selections can be created.
 * A one-time retry attempt is allowed in the flow.
 
 == Source code
