@@ -1,0 +1,19 @@
+# configuration for conversion to docs.globus.org
+title: 'Evaluate preliminary results'
+short_description: |
+  Evaluate preliminary results of an experiment.
+  If the results look good, more expensive steps can be performed.
+
+example_dir: 'evaluate_preliminary_results'
+index_source:
+  copy: "README.adoc"
+append_source_blocks: false
+
+include_files:
+  - 'function.py'
+  # All common files must be explicitly listed when setting `include_files`.
+  - 'definition.json'
+  - 'input_schema.json'
+  - 'sample_input.json'
+
+menu_weight: 150

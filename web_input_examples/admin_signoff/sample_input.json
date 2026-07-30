@@ -1,0 +1,25 @@
+{
+  "file_manager_settings": {
+    "DATA": [
+      {
+        "DATA_TYPE": "transfer_item",
+        "source_path": "/path/to/file.txt",
+        "destination_path": "/file.txt",
+        "recursive": false
+      }
+    ],
+    "source_endpoint": "11111111-4aa5-44f5-871d-f37ee5afe1c7",
+    "destination_endpoint": "22222222-cf92-4d9b-9450-5ac213a52455",
+    "delete_destination_extra": false,
+    "encrypt_data": false,
+    "fail_on_quota_errors": false,
+    "label": "My Personal GCP Collection to The Secure Enclave",
+    "preserve_timestamp": false,
+    "skip_source_errors": false,
+    "verify_checksum": true,
+    "notify_on_succeeded": true,
+    "notify_on_failed": true,
+    "notify_on_inactive": true,
+    "store_base_path_info": true
+  }
+}

@@ -84,7 +84,7 @@
           "subject"
         ],
         "body_mimetype": "text/html",
-        "body_template": "<p>The following file has been submitted for review. It must be approved before it can be transferred.</p><p><table><tr><td>Submitter</td><td><code>${SUBMITTER}</code></td></tr><tr><td>Filename</td><td><code>${FILE_NAME}</code></td></tr><tr><td>Size (bytes)</td><td><code>${FILE_SIZE}</code></td></tr></table></p><p><ul><li><a href=\"${APPROVAL_URL}\">\u2705 Approve transfer</a></li><li><a href=\"${REJECTION_URL}\">\u274c Reject transfer</a></li></ul></p>",
+        "body_template": "<p>The following file has been submitted for review. It must be approved before it can be transferred.</p><p><table><tr><td>Submitter</td><td><code>${SUBMITTER}</code></td></tr><tr><td>Filename</td><td><code>${FILE_NAME}</code></td></tr><tr><td>Size (bytes)</td><td><code>${FILE_SIZE}</code></td></tr></table></p><p><ul><li><a href=\"${APPROVAL_URL}\">✅ Approve transfer</a></li><li><a href=\"${REJECTION_URL}\">❌ Reject transfer</a></li></ul></p>",
         "body_variables": {
           "FILE_NAME.$": "$.source_stat.details.name",
           "FILE_SIZE.$": "$.source_stat.details.size",

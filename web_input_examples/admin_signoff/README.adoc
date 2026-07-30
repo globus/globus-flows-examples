@@ -1,0 +1,27 @@
+= Web Inputs: Admin signoff
+
+link:{flows_ide_link}[Try it out in the Flows IDE.^]
+
+== Description
+
+GCS collections can be configured with Associated Flow Policies.
+These policies ensure that all transfer requests are initiated from within a particular flow.
+
+This example builds on this GCS feature, and introduces Web Inputs:
+an administrator must approve each transfer request into the collection.
+
+The flow is designed with these assumptions and requirements:
+
+* The destination collection's Associated Flow Policy lists this flow as its requirement
+  when the collection is the **destination** in a transfer.
+* The administrators who can approve the transfer request
+  are all part of a single Globus group.
+
+== Highlights
+
+* The flow and its input schema are compatible with a GCS collection
+  whose Associated Flow Policies are configured.
+* The name of the source collection in the transfer request
+  is gathered prior to creating the Web Input.
+* The Web Input's context is dynamically generated with the user's information
+  and information about the transfer request.

@@ -1,0 +1,32 @@
+{
+  "type": "object",
+  "required": [
+    "location"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "location": {
+      "type": "object",
+      "format": "globus-collection",
+      "title": "The collection and path to the data that will be analyzed",
+      "required": [
+        "id",
+        "path"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "Source Collection ID",
+          "format": "uuid",
+          "description": "The UUID of the collection hosting the data to be analyzed"
+        },
+        "path": {
+          "type": "string",
+          "title": "Source Collection Path",
+          "description": "The path to the data on the collection"
+        }
+      }
+    }
+  }
+}

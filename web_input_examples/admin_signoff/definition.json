@@ -1,0 +1,89 @@
+{
+  "Comment": "Get admin approval before transferring data into a secure enclave.",
+  "StartAt": "GetSourceEndpointInfo",
+  "States": {
+    "GetSourceEndpointInfo": {
+      "Type": "Action",
+      "ActionUrl": "https://transfer.actions.globus.org/collection_info",
+      "Parameters": {
+        "endpoint_id.$": "$.file_manager_settings.source_endpoint"
+      },
+      "ResultPath": "$.source_endpoint_info",
+      "Next": "CreateWebInput"
+    },
+    "CreateWebInput": {
+      "Type": "CreateWebInput",
+      "Parameters": {
+        "InputType": "Selection",
+        "Context": {
+          "PresentationStyle": "Table",
+          "Title": "A user is requesting a data transfer into the Secure Enclave Collection",
+          "Rows": [
+            {
+              "Field": "Requesting user",
+              "Value.=": "(`$._context.email` or `$._context.username`) + ' (' + `$._context.user_id` + ')'"
+            },
+            {
+              "Field": "Source collection",
+              "Value.=": "`$.source_endpoint_info.details.display_name` + ' (' + `$.file_manager_settings.source_endpoint` + ')'"
+            },
+            {
+              "Field": "Total data item count",
+              "Value.=": "str(len(`$.file_manager_settings.DATA`))"
+            },
+            {
+              "Field": "First data item",
+              "Value.=": "`$.file_manager_settings.DATA[0].source_path` + ' -> ' + `$.file_manager_settings.DATA[0].destination_path`"
+            }
+          ]
+        },
+        "Options": [
+          {
+            "Value": "approve",
+            "Label": "✅ Approve",
+            "Description": "Authorize the transfer request."
+          },
+          {
+            "Value": "deny",
+            "Label": "❌ Deny",
+            "Description": "Deny the transfer request."
+          }
+        ],
+        "RespondentUrns": [
+          "urn:globus:group:id:11111111-2222-3333-4444-555555555555"
+        ]
+      },
+      "ResultPath": "$.web_input_info",
+      "Next": "AwaitResponse"
+    },
+    "AwaitResponse": {
+      "Type": "AwaitWebInput",
+      "Parameters": {
+        "web_input_id.$": "$.web_input_info.web_input_id"
+      },
+      "ResultPath": "$.response_info",
+      "Next": "EvaluateResponse"
+    },
+    "EvaluateResponse": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.response_info.response",
+          "StringEquals": "approve",
+          "Next": "Transfer"
+        }
+      ],
+      "Default": "TransferRequestNotApproved"
+    },
+    "TransferRequestNotApproved": {
+      "Type": "Fail",
+      "Cause": "The transfer request was not approved."
+    },
+    "Transfer": {
+      "Type": "Action",
+      "ActionUrl": "https://transfer.actions.globus.org/transfer",
+      "InputPath": "$.file_manager_settings",
+      "End": true
+    }
+  }
+}

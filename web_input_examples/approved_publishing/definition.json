@@ -1,0 +1,148 @@
+{
+  "Comment": "Generate a report and seek approval to publish it",
+  "StartAt": "Generate",
+  "States": {
+    "Generate": {
+      "Comment": "Generate the report using a Globus Compute function",
+      "Type": "Action",
+      "Handler": {
+        "Type": "ActionProvider",
+        "Url": "https://compute.actions.globus.org/v3"
+      },
+      "Parameters": {
+        "endpoint_id": "11111111-2222-3333-4444-555555555555",
+        "tasks": [
+          {
+            "function_id": "11111111-2222-3333-4444-555555555555",
+            "kwargs": {
+              "id.$": "$.location.id",
+              "path.$": "$.location.path"
+            }
+          }
+        ]
+      },
+      "ResultPath": "$.compute_results",
+      "Next": "RehomeComputeResults"
+    },
+    "RehomeComputeResults": {
+      "Type": "Pass",
+      "InputPath": "$.compute_results.details.results[0].output",
+      "ResultPath": "$.compute_results",
+      "Next": "CreateWebInput"
+    },
+    "CreateWebInput": {
+      "Type": "CreateWebInput",
+      "Parameters": {
+        "InputType": "Selection",
+        "Context": {
+          "PresentationStyle": "Table",
+          "Title.=": "'Approve publication of report \"' + `$.compute_results.title` + '\"'",
+          "Rows": [
+            {
+              "Field": "Report date",
+              "Value.$": "$.compute_results.date"
+            },
+            {
+              "Field": "Report name",
+              "Value.$": "$.compute_results.title"
+            },
+            {
+              "Field": "Result range and std dev",
+              "Value.=": "'[' + str(`$.compute_results.low`) + ', ' + str(`$.compute_results.high`) + '], ' + str(`$.compute_results.std_dev`)"
+            },
+            {
+              "Field": "Result confidence",
+              "Value.$": "$.compute_results.confidence"
+            }
+          ]
+        },
+        "Options": [
+          {
+            "Value": "public",
+            "Label": "✅ Publish",
+            "Description": "Make the report public."
+          },
+          {
+            "Value": "private",
+            "Label": "❌ Store, but don't publish (default)",
+            "Description": "Ingest the report, but don't make it public."
+          }
+        ],
+        "RespondentUrns": [
+          "urn:globus:group:id:11111111-2222-3333-4444-555555555555"
+        ]
+      },
+      "ResultPath": "$.web_input_info",
+      "Next": "PrepareIngestPayload"
+    },
+    "PrepareIngestPayload": {
+      "Comment": "Prepare the Search ingest payload. `visible_to` is set to a private Globus Group and will be modified only if publication is approved.",
+      "Type": "ExpressionEval",
+      "Parameters": {
+        "search_index": "11111111-2222-3333-4444-555555555555",
+        "subject.$": "$.compute_results.title",
+        "visible_to": [
+          "urn:globus:group:id:11111111-2222-3333-4444-555555555555"
+        ],
+        "content": {
+          "date.$": "$.compute_results.date",
+          "collection_id.$": "$.location.id",
+          "report_path.$": "$.compute_results.report_path"
+        }
+      },
+      "ResultPath": "$.ingest_parameters",
+      "Next": "AwaitResponse"
+    },
+    "AwaitResponse": {
+      "Type": "AwaitWebInput",
+      "Parameters": {
+        "web_input_id.$": "$.web_input_info.web_input_id"
+      },
+      "ResultPath": "$.response_info",
+      "Next": "EvaluateResponse",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "Flows.WebInputExpired"
+          ],
+          "Next": "EvaluateResponse",
+          "ResultPath": "$.response_info"
+        }
+      ]
+    },
+    "EvaluateResponse": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.response_info.response",
+          "StringEquals": "public",
+          "Next": "MakeReportPublic"
+        }
+      ],
+      "Default": "Ingest"
+    },
+    "MakeReportPublic": {
+      "Comment": "Publication was approved. Update `visible_to` to 'public'; all other fields are simply copied.",
+      "Type": "ExpressionEval",
+      "Parameters": {
+        "visible_to": [
+          "public"
+        ],
+        "content.$": "$.ingest_parameters.content",
+        "search_index.$": "$.ingest_parameters.search_index",
+        "subject.$": "$.ingest_parameters.subject"
+      },
+      "ResultPath": "$.ingest_parameters",
+      "Next": "Ingest"
+    },
+    "Ingest": {
+      "Type": "Action",
+      "Handler": {
+        "Type": "ActionProvider",
+        "Url": "https://actions.globus.org/search/ingest"
+      },
+      "InputPath": "$.ingest_parameters",
+      "End": true
+    }
+  }
+}
