@@ -1,20 +1,8 @@
 # configuration for conversion to docs.globus.org
-title: 'Web Inputs: Admin signoff'
-short_description: |
-  Require admin approval before transferring data into a secure enclave.
-
-  The flow is designed with these assumptions and requirements:
-
-  * The destination collection's Associated Flow Policy lists this flow as its requirement
-    when the collection is the **destination** in a transfer.
-  * The administrators who can sign-off on the transfer request
-    are all part of a single Globus group.
-  * The administrators are not notified by the flow that approval is required
-    (this could be added using the Notification action provider,
-    which would require one additional state in the flow definition).
-
-    Instead, it is expected that they will regularly check the Globus Web App
-    for notifications that a Web Input is awaiting their response.
+title: 'Transfer after Approval'
+short_description: | 
+  Allow users to transfer data into a secure enclave after obtaining an approval
+  from a group of administrators.
 
 example_dir: 'admin_signoff'
 index_source:
