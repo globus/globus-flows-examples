@@ -1,6 +1,6 @@
 # configuration for conversion to docs.globus.org
 title: 'Transfer after Approval'
-short_description: | 
+short_description: |
   Allow users to transfer data into a secure enclave after obtaining an approval
   from a group of administrators.
 
