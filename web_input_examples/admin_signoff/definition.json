@@ -50,7 +50,7 @@
           }
         ],
         "RespondentUrns": [
-          "urn:globus:group:id:11111111-2222-3333-4444-555555555555"
+          "urn:globus:groups:id:11111111-2222-3333-4444-555555555555"
         ]
       },
       "ResultPath": "$.web_input_info",
